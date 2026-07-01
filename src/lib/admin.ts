@@ -1,7 +1,6 @@
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getSupabaseServiceRoleKey, getSupabaseUrl } from "@/lib/supabase/config";
 
 export function getAdminEmails() {
   return (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "")
@@ -16,17 +15,18 @@ export function isAdminEmail(email?: string | null) {
 }
 
 export function hasServiceRoleKey() {
-  return Boolean(getSupabaseServiceRoleKey());
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 export function createAdminClient() {
-  const serviceRoleKey = getSupabaseServiceRoleKey();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!serviceRoleKey) {
+  if (!url || !serviceRoleKey) {
     return null;
   }
 
-  return createSupabaseJsClient(getSupabaseUrl(), serviceRoleKey, {
+  return createSupabaseJsClient(url, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

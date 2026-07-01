@@ -5,9 +5,8 @@ import EmptyState from "@/components/empty-state";
 import ClubLogo from "@/components/club-logo";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
-import FavoriteButton from "@/components/favorite-button";
-import ReportButton from "@/components/report-button";
 import { calculatePlayerClubCompatibility } from "@/lib/matching";
+import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -71,15 +70,7 @@ export default async function JoueurClubsPage({
       ? clubsQuery.order("club_name", { ascending: true })
       : clubsQuery.order("created_at", { ascending: false });
 
-  const [{ data: clubs }, { data: savedClubs }] = await Promise.all([
-    clubsQuery,
-    supabase
-      .from("saved_items")
-      .select("target_id")
-      .eq("user_id", user.id)
-      .eq("target_type", "club"),
-  ]);
-  const savedClubIds = new Set((savedClubs || []).map((item: any) => item.target_id));
+  const { data: clubs } = await clubsQuery;
   const scoredClubs = (clubs || []).map((club) => ({ club, match: calculatePlayerClubCompatibility(profile, club) }));
   const sortedClubs = sort === "match" ? scoredClubs.sort((a, b) => b.match.score - a.match.score) : scoredClubs;
   const hasFilters = Boolean(q || city || level || sort !== "match");
@@ -91,43 +82,51 @@ export default async function JoueurClubsPage({
           Clubs
         </p>
 
-        <h1 className="font-display mt-5 text-[3.2rem] leading-[0.9] text-white sm:text-[4.6rem] lg:text-[5.6rem]">
-          Clubs compatibles
+        <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem] lg:text-[5.6rem]">
+          Clubs around
+          <br />
+          ton profil
         </h1>
 
         <p className="mt-7 max-w-2xl text-base leading-8 text-white/68 sm:text-lg">
-          Découvre les clubs proches de ton profil, de ton sport et de ta zone.
+          Une lecture plus simple des clubs liés à ton sport et à ta zone.
         </p>
       </section>
 
       <section className="rounded-[28px] border border-white/8 bg-white/2 p-5">
-        <form className="ui-filter-grid gap-4">
+        <form className="grid gap-4 lg:grid-cols-4">
           <input
             type="text"
             name="q"
             defaultValue={q}
             placeholder="Rechercher un club..."
-            className="ui-input w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/30"
+            className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
           />
-          <input
-            type="text"
+          <select
             name="city"
             defaultValue={city}
-            placeholder="Ville"
-            className="ui-input w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/30"
-          />
-          <input
-            type="text"
+            className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
+          >
+            <option value="" className="bg-[#07080f] text-white/50">Toutes les zones</option>
+            {REGION_OPTIONS.map((region) => (
+              <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+            ))}
+          </select>
+          <select
             name="level"
             defaultValue={level}
-            placeholder="Niveau"
-            className="ui-input w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none placeholder:text-white/30"
-          />
-          <div className="flex flex-wrap gap-3">
+            className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
+          >
+            <option value="" className="bg-[#07080f] text-white/50">Tous les niveaux</option>
+            {LEVEL_OPTIONS.map((item) => (
+              <option key={item} value={item} className="bg-[#07080f] text-white">{item}</option>
+            ))}
+          </select>
+          <div className="flex gap-3">
             <select
               name="sort"
               defaultValue={sort}
-              className="ui-select min-w-[190px] flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none"
+              className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
             >
               <option value="match" className="bg-[#07080f] text-white">
                 Meilleurs matchs
@@ -206,16 +205,12 @@ export default async function JoueurClubsPage({
                       ))}
                     </div>
 
-                    <div className="mt-6 flex flex-wrap items-center gap-3">
-                      <Link
-                        href={`/app/joueur/clubs/${club.id}`}
-                        className="btn-secondary rounded-full px-4 py-2.5 text-sm font-medium"
-                      >
-                        Voir le club
-                      </Link>
-                      <FavoriteButton targetType="club" targetId={club.id} initialSaved={savedClubIds.has(club.id)} compact />
-                      <ReportButton targetType="club" targetId={club.id} compact />
-                    </div>
+                    <Link
+                      href={`/app/joueur/clubs/${club.id}`}
+                      className="mt-6 inline-flex text-sm font-medium text-[#4f8cff]"
+                    >
+                      Voir le club
+                    </Link>
                   </div>
                   <CompatibilityBadge match={match} compact />
                 </div>

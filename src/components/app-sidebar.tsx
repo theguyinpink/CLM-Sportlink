@@ -141,43 +141,6 @@ function InboxIcon() {
   );
 }
 
-
-function HeartIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" />
-    </svg>
-  );
-}
-
-function ContactIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
 function ShieldIcon() {
   return (
     <svg
@@ -192,25 +155,6 @@ function ShieldIcon() {
     >
       <path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z" />
       <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-function FeedbackIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-      <path d="M8 8h8" />
-      <path d="M8 12h5" />
     </svg>
   );
 }
@@ -308,9 +252,6 @@ export default function AppSidebar({
     { label: "Mon profil", href: "/app/joueur/profil", icon: <UserIcon /> },
     { label: "Notifications", href: "/app/joueur/notifications", icon: <BellIcon />, badge: notificationCount },
     { label: "Demandes", href: "/app/joueur/demandes", icon: <InboxIcon /> },
-    { label: "Contacts", href: "/app/joueur/contacts", icon: <ContactIcon /> },
-    { label: "Favoris", href: "/app/joueur/favoris", icon: <HeartIcon /> },
-    { label: "Retour bêta", href: "/app/retour-beta", icon: <FeedbackIcon /> },
     { label: "Clubs", href: "/app/joueur/clubs", icon: <ClubIcon /> },
     { label: "Opportunités", href: "/app/joueur/opportunites", icon: <DocumentIcon /> },
     { label: "Paramètres", href: "/app/joueur/parametres", icon: <SettingsIcon /> },
@@ -322,9 +263,6 @@ export default function AppSidebar({
     { label: "Ma fiche", href: "/app/club/profil", icon: <UserIcon /> },
     { label: "Notifications", href: "/app/club/notifications", icon: <BellIcon />, badge: notificationCount },
     { label: "Demandes", href: "/app/club/demandes", icon: <InboxIcon /> },
-    { label: "Contacts", href: "/app/club/contacts", icon: <ContactIcon /> },
-    { label: "Favoris", href: "/app/club/favoris", icon: <HeartIcon /> },
-    { label: "Retour bêta", href: "/app/retour-beta", icon: <FeedbackIcon /> },
     { label: "Joueurs", href: "/app/club/joueurs", icon: <ClubIcon /> },
     { label: "Mes annonces", href: "/app/club/annonces", icon: <DocumentIcon /> },
     { label: "Paramètres", href: "/app/club/parametres", icon: <SettingsIcon /> },
@@ -347,10 +285,10 @@ export default function AppSidebar({
             key={item.href}
             href={item.href}
             className={[
-              "group flex items-center justify-between rounded-[16px] px-3 py-2.5 transition",
+              "group flex items-center justify-between rounded-[20px] px-3 py-3 transition",
               isActive
-                ? "border border-white/10 bg-white/[0.075] font-medium text-white"
-                : "border border-transparent text-white/62 hover:border-white/8 hover:bg-white/[0.045] hover:text-white",
+                ? "bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] font-medium text-[#050612] shadow-[0_14px_45px_rgba(79,140,255,0.18)]"
+                : "text-white/68 hover:bg-white/[0.05] hover:text-white",
             ].join(" ")}
           >
             <span className="flex items-center gap-3">
@@ -365,8 +303,8 @@ export default function AppSidebar({
                 className={[
                   "inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold",
                   isActive
-                    ? "bg-white text-[#08111f]"
-                    : "bg-white/12 text-white",
+                    ? "bg-[#050612] text-[#00d4ff]"
+                    : "bg-[#35e6a5] text-[#050612]",
                 ].join(" ")}
               >
                 {item.badge > 9 ? "9+" : item.badge}
@@ -401,7 +339,7 @@ export default function AppSidebar({
       >
         <div
           className={[
-            "absolute left-0 top-0 h-dvh w-[86vw] max-w-[380px] overflow-y-auto overscroll-contain border-r border-white/10 bg-[#0d1020]/96 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
+            "absolute left-0 top-0 h-full w-[86vw] max-w-[380px] border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
             open ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
@@ -430,7 +368,7 @@ export default function AppSidebar({
       </div>
 
       <aside className="hidden w-full lg:block">
-        <div className="sticky top-[102px] max-h-[calc(100dvh-118px)] overflow-y-auto overscroll-contain pr-1">
+        <div className="sticky top-[102px]">
           <div className="premium-card rounded-[30px] p-5">
             <div className="border-b border-white/8 pb-5">
               <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">

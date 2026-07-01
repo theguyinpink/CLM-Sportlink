@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/empty-state";
 import OpportunityCard from "@/components/opportunity-card";
-import { calculateOfferCompatibility, getCategoryLabel, getOfferType, getOfferTypeLabel } from "@/lib/matching";
+import OnboardingCard from "@/components/onboarding-card";
+import { calculateOfferCompatibility, calculatePlayerCompletion, getCategoryLabel, getOfferType, getOfferTypeLabel } from "@/lib/matching";
+import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -49,30 +51,21 @@ export default async function JoueurOpportunitesPage({
 
   if (!profile) redirect("/app/joueur/profil/edit");
 
-  const [{ data: activeOffers }, { data: savedItems }] = await Promise.all([
-    supabase
-      .from("club_offers")
-      .select("*, clubs(id, club_name, sport, city, region, level, logo_path, description)")
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(100),
-    supabase
-      .from("saved_items")
-      .select("target_id")
-      .eq("user_id", user.id)
-      .eq("target_type", "club_offer"),
-  ]);
-
-  const savedOfferIds = new Set((savedItems || []).map((item: any) => item.target_id));
+  const { data: activeOffers } = await supabase
+    .from("club_offers")
+    .select("*, clubs(id, club_name, sport, city, region, level, logo_path, description)")
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   const matchesSearch = (...values: Array<string | null | undefined>) =>
     !q || values.some((value) => normalizeSearch(value).includes(q));
   const matchesCity = (value?: string | null) => !city || normalizeSearch(value).includes(city);
   const matchesLevel = (value?: string | null) => !level || normalizeSearch(value).includes(level);
 
-  const searchableRoleTerms = (offerType: string) => {
+  const searchableRoleTerms = (offerType: string, category?: string | null) => {
     if (offerType === "referee") {
-      return "recherche arbitre arbitrage officiel match referee arbitrer";
+      return "recherche arbitre arbitrage officiel match referee referee arbitrer";
     }
 
     if (offerType === "staff") {
@@ -100,7 +93,6 @@ export default async function JoueurOpportunitesPage({
         matchesSearch(
           offer.title,
           offer.description,
-          offer.sport,
           offer.position_needed,
           offer.level_required,
           offer.location,
@@ -109,7 +101,7 @@ export default async function JoueurOpportunitesPage({
           getOfferTypeLabel(offerType),
           offer.category,
           getCategoryLabel(offer.category),
-          searchableRoleTerms(offerType),
+          searchableRoleTerms(offerType, offer.category),
           club.club_name,
           club.sport,
           club.city,
@@ -127,59 +119,90 @@ export default async function JoueurOpportunitesPage({
     offers = [...offers].sort((a: any, b: any) => (a.offer.title || "").localeCompare(b.offer.title || ""));
   }
 
+  const bestMatch = offers[0];
+  const completion = calculatePlayerCompletion(profile);
   const hasFilters = Boolean(q || city || level || sort !== "match" || type !== "all");
 
   return (
-    <main className="space-y-7">
-      <section className="premium-card rounded-[28px] p-5 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Recherche</p>
-            <h1 className="font-display mt-2 text-[2.2rem] leading-tight text-[color:var(--text-main)]">Opportunités</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--text-muted)]">
-              Recherche une annonce par club, sport, besoin, ville, niveau ou catégorie. La meilleure compatibilité remonte automatiquement en premier.
-            </p>
-          </div>
-          <span className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-4 py-2 text-sm font-medium text-[color:var(--text-soft)]">
-            {offers.length} offre{offers.length > 1 ? "s" : ""}
-          </span>
-        </div>
+    <main className="space-y-10">
+      <OnboardingCard
+        title="Profil joueur"
+        description="Plus ton profil est complet, plus les offres compatibles ressortent correctement dans ta recherche."
+        score={completion.score}
+        checks={completion.checks}
+        ctaHref="/app/joueur/profil/edit"
+        ctaLabel="Améliorer mon profil"
+      />
 
-        <form className="ui-filter-grid gap-4">
-          <input
-            type="text"
-            name="q"
-            defaultValue={params.q || ""}
-            placeholder="Club, sport, arbitre, coach, poste..."
-            className="ui-input w-full border px-5 py-3 text-sm leading-6 md:col-span-2"
-          />
-          <select name="type" defaultValue={type} className="ui-select w-full border px-5 py-3 text-sm leading-6">
-            <option value="all">Tous les besoins</option>
-            <option value="player">Joueur</option>
-            <option value="referee">Arbitre</option>
-            <option value="staff">Coach / staff</option>
-          </select>
-          <input type="text" name="city" defaultValue={params.city || ""} placeholder="Ville" className="ui-input w-full border px-5 py-3 text-sm leading-6" />
-          <input type="text" name="level" defaultValue={params.level || ""} placeholder="Niveau" className="ui-input w-full border px-5 py-3 text-sm leading-6" />
-          <div className="flex flex-wrap gap-3">
-            <select name="sort" defaultValue={sort} className="ui-select min-w-[190px] flex-1 border px-5 py-3 text-sm leading-6">
-              <option value="match">Compatibilité</option>
-              <option value="recent">Plus récents</option>
-              <option value="alpha">A-Z</option>
-            </select>
-            <button type="submit" className="btn-primary rounded-2xl px-5 py-3 text-sm font-semibold">Filtrer</button>
+      <section className="space-y-6">
+        {bestMatch && (
+          <div className="premium-card rounded-[34px] p-6 sm:p-7">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[#35e6a5]">Meilleur match</p>
+                <h1 className="font-display mt-3 text-[2.4rem] uppercase leading-[0.9] text-white sm:text-[3.2rem]">
+                  L’offre la plus compatible
+                </h1>
+              </div>
+              <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-4 py-2 text-sm font-semibold text-[#35e6a5]">
+                {bestMatch.match.score}% compatible
+              </span>
+            </div>
+            <OpportunityCard offer={bestMatch.offer} club={bestMatch.club} match={bestMatch.match} href={`/app/joueur/clubs/${bestMatch.club.id}`} index={0} />
           </div>
-        </form>
-
-        {hasFilters && (
-          <Link href="/app/joueur/opportunites" className="mt-4 inline-flex text-sm font-medium text-[color:var(--primary)]">
-            Réinitialiser les filtres
-          </Link>
         )}
+
+        <div className="rounded-[28px] border border-white/8 bg-white/2 p-5">
+          <div className="mb-5">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Recherche</p>
+            <h2 className="font-display mt-2 text-[2rem] uppercase leading-[0.92] text-white">Offres compatibles</h2>
+          </div>
+
+          <form className="grid gap-4 lg:grid-cols-6">
+            <input
+              type="text"
+              name="q"
+              defaultValue={params.q || ""}
+              placeholder="Club, poste, offre..."
+              className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30 lg:col-span-2"
+            />
+            <select name="type" defaultValue={type} className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
+              <option value="all" className="bg-[#07080f] text-white">Tous les besoins</option>
+              <option value="player" className="bg-[#07080f] text-white">Joueur</option>
+              <option value="referee" className="bg-[#07080f] text-white">Arbitre</option>
+              <option value="staff" className="bg-[#07080f] text-white">Coach / staff</option>
+            </select>
+            <select name="city" defaultValue={params.city || ""} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
+              <option value="" className="bg-[#07080f] text-white/50">Toutes les zones</option>
+              {REGION_OPTIONS.map((region) => (
+                <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+              ))}
+            </select>
+            <select name="level" defaultValue={params.level || ""} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
+              <option value="" className="bg-[#07080f] text-white/50">Tous les niveaux</option>
+              {LEVEL_OPTIONS.map((item) => (
+                <option key={item} value={item} className="bg-[#07080f] text-white">{item}</option>
+              ))}
+            </select>
+            <div className="flex gap-3">
+              <select name="sort" defaultValue={sort} className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
+                <option value="match" className="bg-[#07080f] text-white">Compatibilité</option>
+                <option value="recent" className="bg-[#07080f] text-white">Plus récents</option>
+                <option value="alpha" className="bg-[#07080f] text-white">A-Z</option>
+              </select>
+              <button type="submit" className="rounded-full bg-[#4f8cff] px-5 py-3 text-sm font-medium text-[#07080f] transition hover:bg-[#00d4ff]">Filtrer</button>
+            </div>
+          </form>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/55">
+            <span>{offers.length} offre{offers.length > 1 ? "s" : ""} compatible{offers.length > 1 ? "s" : ""}</span>
+            {hasFilters && <Link href="/app/joueur/opportunites" className="text-[#4f8cff]">Réinitialiser</Link>}
+          </div>
+        </div>
       </section>
 
       <section>
-        <div className="grid gap-5 2xl:grid-cols-2">
+        <div className="space-y-6">
           {offers.length === 0 ? (
             <EmptyState
               eyebrow="Aucune annonce"
@@ -191,7 +214,7 @@ export default async function JoueurOpportunitesPage({
             />
           ) : (
             offers.map((item: any, index: number) => (
-              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/annonces/${item.offer.id}`} index={index} isSaved={savedOfferIds.has(item.offer.id)} />
+              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/joueur/clubs/${item.club.id}`} index={index} />
             ))
           )}
         </div>

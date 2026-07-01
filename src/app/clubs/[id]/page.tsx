@@ -2,9 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ClubLogo from "@/components/club-logo";
-import PostCard from "@/components/post-card";
 import { getCategoryLabel } from "@/lib/matching";
-import { getPublicPostsByClub } from "@/lib/post-feed";
 
 export default async function PublicClubDetailPage({
   params,
@@ -22,16 +20,12 @@ export default async function PublicClubDetailPage({
 
   if (!club) notFound();
 
-  const [{ data: offers }, { data: { user } }, clubPosts] = await Promise.all([
-    supabase
-      .from("club_offers")
-      .select("*")
-      .eq("club_id", club.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false }),
-    supabase.auth.getUser(),
-    getPublicPostsByClub(supabase, club.id, club.user_id, 8),
-  ]);
+  const { data: offers } = await supabase
+    .from("club_offers")
+    .select("*")
+    .eq("club_id", club.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
@@ -63,7 +57,7 @@ export default async function PublicClubDetailPage({
             ) : (
               offers.map((offer) => (
                 <article key={offer.id} className="premium-card rounded-[28px] p-5">
-                  <span className="ui-pill rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">{getCategoryLabel(offer.category)}</span>
+                  <span className="rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">{getCategoryLabel(offer.category)}</span>
                   <h2 className="font-display mt-4 text-[2.2rem] uppercase leading-[0.92] text-white">{offer.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-white/68">{offer.position_needed || "Poste non précisé"}{offer.level_required ? ` • ${offer.level_required}` : ""}{offer.location ? ` • ${offer.location}` : ""}</p>
                   <p className="mt-4 text-sm leading-8 text-white/68">{offer.description || "Aucune description."}</p>
@@ -72,24 +66,6 @@ export default async function PublicClubDetailPage({
             )}
           </div>
         </div>
-      </section>
-
-
-      <section className="mt-16 space-y-8 border-t border-white/5 pt-8">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Médias & actualités</p>
-          <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts du club</h2>
-        </div>
-
-        {clubPosts.length === 0 ? (
-          <p className="text-white/68">Aucune actualité publique pour le moment.</p>
-        ) : (
-          <div className="space-y-5">
-            {clubPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} currentUserId={user?.id} viewerRole="player" index={index} />
-            ))}
-          </div>
-        )}
       </section>
     </main>
   );

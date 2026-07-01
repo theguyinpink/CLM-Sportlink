@@ -45,7 +45,6 @@ export type ClubLike = {
 
 export type OfferLike = {
   title?: string | null;
-  sport?: string | null;
   category?: string | null;
   offer_type?: string | null;
   position_needed?: string | null;
@@ -209,7 +208,6 @@ export function calculateOfferCompatibility(
   const reasons: MatchReason[] = [];
   let score = 0;
   const offerType = getOfferType(offer.offer_type, offer.category);
-  const offerSport = offer.sport || club.sport;
 
   if (offerType === "referee") {
     if (hasRole(player, "referee")) {
@@ -219,7 +217,7 @@ export function calculateOfferCompatibility(
       reasons.push({ label: "Rôle", detail: "Arbitrage non indiqué sur le profil", tone: "warning", points: 0 });
     }
 
-    if (includesOrEquals(player.referee_sports || player.sport, offerSport)) {
+    if (includesOrEquals(player.referee_sports || player.sport, club.sport)) {
       score += 25;
       reasons.push({ label: "Sport", detail: "Sport arbitré compatible", tone: "success", points: 25 });
     } else if (!player.referee_sports && !player.sport) {
@@ -255,7 +253,7 @@ export function calculateOfferCompatibility(
       reasons.push({ label: "Zone", detail: "Zone à vérifier", tone: "warning", points: 0 });
     }
 
-    const common = sharedKeywords(`${player.referee_availability || ""} ${player.referee_experience || ""} ${player.bio || ""}`, `${offer.title || ""} ${offer.description || ""} ${offer.sport || ""}`);
+    const common = sharedKeywords(`${player.referee_availability || ""} ${player.referee_experience || ""} ${player.bio || ""}`, `${offer.title || ""} ${offer.description || ""}`);
     if (common.length > 0) {
       score += 10;
       reasons.push({ label: "Infos", detail: `Signaux communs : ${common.join(", ")}`, tone: "primary", points: 10 });
@@ -275,10 +273,10 @@ export function calculateOfferCompatibility(
       reasons.push({ label: "Rôle", detail: "Staff non indiqué sur le profil", tone: "warning", points: 0 });
     }
 
-    if (includesOrEquals(player.sport, offerSport)) {
+    if (includesOrEquals(player.sport, club.sport)) {
       score += 25;
       reasons.push({ label: "Sport", detail: "Même sport", tone: "success", points: 25 });
-    } else if (!player.sport || !offerSport) {
+    } else if (!player.sport || !club.sport) {
       score += 6;
       reasons.push({ label: "Sport", detail: "Sport à compléter", tone: "muted", points: 6 });
     } else {
@@ -302,7 +300,7 @@ export function calculateOfferCompatibility(
       reasons.push({ label: "Zone", detail: "Zone à vérifier", tone: "warning", points: 0 });
     }
 
-    const common = sharedKeywords(`${player.staff_experience || ""} ${player.bio || ""}`, `${offer.title || ""} ${offer.description || ""} ${offer.sport || ""}`);
+    const common = sharedKeywords(`${player.staff_experience || ""} ${player.bio || ""}`, `${offer.title || ""} ${offer.description || ""}`);
     if (common.length > 0) {
       score += 10;
       reasons.push({ label: "Projet", detail: `Signaux communs : ${common.join(", ")}`, tone: "primary", points: 10 });
@@ -316,10 +314,10 @@ export function calculateOfferCompatibility(
 
   // Barème joueur stable sur 100 points :
   // Sport 25 + Poste 25 + Niveau 25 + Zone 15 + Mots-clés 10.
-  if (includesOrEquals(player.sport, offerSport)) {
+  if (includesOrEquals(player.sport, club.sport)) {
     score += 25;
     reasons.push({ label: "Sport", detail: "Même sport", tone: "success", points: 25 });
-  } else if (!player.sport || !offerSport) {
+  } else if (!player.sport || !club.sport) {
     score += 6;
     reasons.push({ label: "Sport", detail: "Sport à compléter", tone: "muted", points: 6 });
   } else {
@@ -374,7 +372,7 @@ export function calculateOfferCompatibility(
     reasons.push({ label: "Zone", detail: "Zone éloignée", tone: "warning", points: 0 });
   }
 
-  const common = sharedKeywords(player.bio, `${offer.title || ""} ${offer.description || ""} ${offer.sport || ""}`);
+  const common = sharedKeywords(player.bio, `${offer.title || ""} ${offer.description || ""}`);
   if (common.length >= 3) {
     score += 10;
     reasons.push({ label: "Mots-clés", detail: `Mots communs : ${common.join(", ")}`, tone: "success", points: 10 });
@@ -450,39 +448,17 @@ export function calculatePlayerClubCompatibility(player: PlayerLike, club: ClubL
 }
 
 export function calculatePlayerCompletion(player: PlayerLike & { contact_email?: string | null; phone?: string | null }) {
-  const roles = rolesList(player.roles_available);
   const checks = [
     { label: "Nom affiché", done: Boolean(player.display_name) },
     { label: "Sport", done: Boolean(player.sport) },
-    { label: "Rôle", done: roles.length > 0 },
+    { label: "Poste", done: Boolean(player.position) },
+    { label: "Rôle", done: rolesList(player.roles_available).length > 0 },
+    { label: "Niveau", done: Boolean(player.level) },
     { label: "Ville ou région", done: Boolean(player.city || player.region) },
-    { label: "Bio", done: Boolean(player.bio && player.bio.length > 40) },
+    { label: "Bio sportive", done: Boolean(player.bio && player.bio.length > 40) },
     { label: "Contact", done: Boolean(player.contact_email || player.phone) },
     { label: "Avatar", done: Boolean(player.avatar_path) },
   ];
-
-  if (roles.includes("player")) {
-    checks.push(
-      { label: "Poste joueur", done: Boolean(player.position) },
-      { label: "Niveau joueur", done: Boolean(player.level) },
-    );
-  }
-
-  if (roles.includes("referee")) {
-    checks.push(
-      { label: "Sport arbitré", done: Boolean(player.referee_sports || player.sport) },
-      { label: "Niveau d’arbitrage", done: Boolean(player.referee_level) },
-      { label: "Disponibilités arbitre", done: Boolean(player.referee_availability) },
-    );
-  }
-
-  if (roles.includes("staff")) {
-    checks.push(
-      { label: "Rôle staff", done: Boolean(player.staff_roles) },
-      { label: "Expérience staff", done: Boolean(player.staff_experience) },
-    );
-  }
-
   const done = checks.filter((item) => item.done).length;
   return { score: Math.round((done / checks.length) * 100), checks };
 }

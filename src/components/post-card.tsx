@@ -6,8 +6,6 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import PlayerAvatar from "@/components/player-avatar";
 import ClubLogo from "@/components/club-logo";
-import ReportButton from "@/components/report-button";
-import FavoriteButton from "@/components/favorite-button";
 import { getPublicStorageUrl } from "@/lib/storage/public-url";
 import {
   formatPostDate,
@@ -15,33 +13,8 @@ import {
   getPostContentTypesFor,
   type PostAuthorType,
 } from "@/lib/posts";
-import {
-  createPostCommentFromClient,
-  deletePostCommentFromClient,
-  deletePostFromClient,
-  togglePostLikeFromClient,
-  updatePostFromClient,
-} from "@/app/post-actions";
-
-export type PostCommentData = {
-  id: string;
-  post_id?: string | null;
-  author_user_id?: string | null;
-  author_type: PostAuthorType;
-  text_content?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  player_profiles?: {
-    id: string;
-    display_name?: string | null;
-    avatar_path?: string | null;
-  } | null;
-  clubs?: {
-    id: string;
-    club_name?: string | null;
-    logo_path?: string | null;
-  } | null;
-};
+import { deletePostFromClient, updatePostFromClient } from "@/app/post-actions";
+import { SPORT_OPTIONS, REGION_OPTIONS, withCurrentOption } from "@/lib/form-options";
 
 export type PostCardData = {
   id: string;
@@ -79,14 +52,6 @@ export type PostCardData = {
     external_url?: string | null;
     sort_order?: number | null;
   }> | null;
-  post_likes?: Array<{
-    id: string;
-    post_id?: string | null;
-    user_id?: string | null;
-  }> | null;
-  post_comments?: PostCommentData[] | null;
-  like_count?: number | null;
-  comment_count?: number | null;
 };
 
 type PostCardProps = {
@@ -153,40 +118,6 @@ function CloseIcon() {
   );
 }
 
-function HeartIcon({ filled = false }: { filled?: boolean }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px]"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" />
-    </svg>
-  );
-}
-
-function CommentIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-[18px] w-[18px]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-4-.9L3 20l1.2-4.2a8.2 8.2 0 0 1-1.1-4.3 8.5 8.5 0 0 1 17 0Z" />
-    </svg>
-  );
-}
-
 function DeleteConfirmModal({
   loading,
   onCancel,
@@ -247,40 +178,17 @@ function DeleteConfirmModal({
   );
 }
 
-function getCommentAuthor(comment: PostCommentData) {
-  const type = comment.author_type === "club" ? "club" : "player";
-  const name =
-    type === "club"
-      ? comment.clubs?.club_name || "Club"
-      : comment.player_profiles?.display_name || "Profil sportif";
-
-  return { type, name };
-}
-
 export default function PostCard({ post, currentUserId, viewerRole, index = 0 }: PostCardProps) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [reactionLoading, setReactionLoading] = useState(false);
-  const [commentLoading, setCommentLoading] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(Boolean(post.post_comments?.length));
   const [mounted, setMounted] = useState(false);
-  const [liked, setLiked] = useState(Boolean(post.post_likes?.some((like) => like.user_id === currentUserId)));
-  const [likeCount, setLikeCount] = useState(post.like_count ?? post.post_likes?.length ?? 0);
-  const [commentCount, setCommentCount] = useState(post.comment_count ?? post.post_comments?.length ?? 0);
-  const [commentText, setCommentText] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    setLiked(Boolean(post.post_likes?.some((like) => like.user_id === currentUserId)));
-    setLikeCount(post.like_count ?? post.post_likes?.length ?? 0);
-    setCommentCount(post.comment_count ?? post.post_comments?.length ?? 0);
-  }, [currentUserId, post.comment_count, post.like_count, post.post_comments, post.post_likes]);
 
   useEffect(() => {
     if (deleteOpen) {
@@ -316,15 +224,6 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
   const media = useMemo(
     () => [...(post.post_media || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     [post.post_media],
-  );
-
-  const comments = useMemo(
-    () => [...(post.post_comments || [])].sort((a, b) => {
-      const left = a.created_at ? new Date(a.created_at).getTime() : 0;
-      const right = b.created_at ? new Date(b.created_at).getTime() : 0;
-      return left - right;
-    }),
-    [post.post_comments],
   );
 
   async function confirmDelete() {
@@ -374,79 +273,10 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
     router.refresh();
   }
 
-  async function handleLike() {
-    if (reactionLoading) return;
-
-    setReactionLoading(true);
-    setError("");
-
-    const previousLiked = liked;
-    const previousCount = likeCount;
-    setLiked(!previousLiked);
-    setLikeCount(Math.max(0, previousCount + (previousLiked ? -1 : 1)));
-
-    const result = await togglePostLikeFromClient(post.id);
-
-    if (!result.ok) {
-      setLiked(previousLiked);
-      setLikeCount(previousCount);
-      setError(result.error || "Impossible de réagir à cette publication.");
-      setReactionLoading(false);
-      return;
-    }
-
-    setLiked(Boolean(result.liked));
-    setLikeCount(result.likeCount ?? Math.max(0, previousCount + (previousLiked ? -1 : 1)));
-    setReactionLoading(false);
-    router.refresh();
-  }
-
-  async function handleCommentSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const text = commentText.trim();
-
-    if (!text) return;
-
-    setCommentLoading(true);
-    setError("");
-
-    const result = await createPostCommentFromClient({
-      post_id: post.id,
-      author_type: viewerRole,
-      text_content: text,
-    });
-
-    if (!result.ok) {
-      setError(result.error || "Impossible d’ajouter le commentaire.");
-      setCommentLoading(false);
-      return;
-    }
-
-    setCommentText("");
-    setCommentsOpen(true);
-    setCommentCount((value) => value + 1);
-    setCommentLoading(false);
-    router.refresh();
-  }
-
-  async function handleDeleteComment(commentId: string) {
-    setError("");
-    const result = await deletePostCommentFromClient(commentId);
-
-    if (!result.ok) {
-      setError(result.error || "Impossible de supprimer le commentaire.");
-      return;
-    }
-
-    setCommentCount((value) => Math.max(0, value - 1));
-    router.refresh();
-  }
-
   return (
     <>
       <article
-        id={`post-${post.id}`}
-        className="premium-card animate-fade-up scroll-mt-28 overflow-hidden rounded-[34px] p-5 transition hover:-translate-y-1 sm:p-6"
+        className="premium-card animate-fade-up overflow-hidden rounded-[34px] p-5 transition hover:-translate-y-1 sm:p-6"
         style={{ animationDelay: `${index * 50}ms` }}
       >
         <div className="flex flex-wrap items-start justify-between gap-5">
@@ -460,9 +290,9 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8bb7ff]">
-                  {authorType === "club" ? "Club" : "Profil sportif"}
+                  {authorType === "club" ? "Club" : "Joueur"}
                 </span>
-                <span className="ui-pill rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">
+                <span className="rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">
                   {getPostContentLabel(post.content_type)}
                 </span>
               </div>
@@ -486,9 +316,6 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
             >
               Voir le profil
             </Link>
-
-            <FavoriteButton targetType="post" targetId={post.id} compact />
-            {!isOwner && <ReportButton targetType="post" targetId={post.id} compact />}
 
             {isOwner && (
               <>
@@ -526,7 +353,7 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
                 <select
                   name="content_type"
                   defaultValue={post.content_type || "post-libre"}
-                  className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none"
+                  className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
                 >
                   {getPostContentTypesFor(authorType).map((item) => (
                     <option key={item.value} value={item.value} className="bg-[#07080f] text-white">
@@ -554,9 +381,19 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
             />
 
             <div className="grid gap-4 sm:grid-cols-4">
-              <input name="sport" defaultValue={post.sport || ""} placeholder="Sport" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
+              <select name="sport" defaultValue={post.sport || ""} className="rounded-full border border-white/10 bg-[#07080f] px-4 py-3 text-white outline-none">
+                <option value="" className="bg-[#07080f] text-white/50">Sport</option>
+                {withCurrentOption(SPORT_OPTIONS, post.sport).map((sport) => (
+                  <option key={sport} value={sport} className="bg-[#07080f] text-white">{sport}</option>
+                ))}
+              </select>
               <input name="city" defaultValue={post.city || ""} placeholder="Ville" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
-              <input name="region" defaultValue={post.region || ""} placeholder="Région" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
+              <select name="region" defaultValue={post.region || ""} className="rounded-full border border-white/10 bg-[#07080f] px-4 py-3 text-white outline-none">
+                <option value="" className="bg-[#07080f] text-white/50">Région</option>
+                {withCurrentOption(REGION_OPTIONS, post.region).map((region) => (
+                  <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+                ))}
+              </select>
               <input name="radius_km" type="number" defaultValue={post.radius_km || 50} placeholder="Rayon" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
             </div>
 
@@ -639,93 +476,6 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
             })}
           </div>
         )}
-
-        <div className="mt-7 border-t border-white/8 pt-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleLike}
-              disabled={reactionLoading}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${liked ? "border-red-400/30 bg-red-500/12 text-red-200" : "border-white/10 bg-white/[0.03] text-white/62 hover:border-red-400/20 hover:bg-red-500/10 hover:text-red-200"}`}
-            >
-              <HeartIcon filled={liked} />
-              {likeCount} {likeCount > 1 ? "likes" : "like"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCommentsOpen((value) => !value)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/62 transition hover:border-[#4f8cff]/25 hover:bg-[#4f8cff]/10 hover:text-white"
-            >
-              <CommentIcon />
-              {commentCount} {commentCount > 1 ? "commentaires" : "commentaire"}
-            </button>
-          </div>
-
-          {commentsOpen && (
-            <div className="mt-5 space-y-4 rounded-[28px] border border-white/8 bg-[#080a14]/70 p-4 sm:p-5">
-              <form onSubmit={handleCommentSubmit} className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  value={commentText}
-                  onChange={(event) => setCommentText(event.target.value)}
-                  maxLength={800}
-                  placeholder="Ajouter un commentaire..."
-                  className="min-h-12 flex-1 rounded-full border border-white/10 bg-white/[0.03] px-5 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#4f8cff]/35"
-                />
-                <button
-                  type="submit"
-                  disabled={commentLoading || !commentText.trim()}
-                  className="rounded-full bg-[#4f8cff] px-5 py-3 text-sm font-semibold text-[#050612] transition hover:bg-[#00d4ff] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {commentLoading ? "Envoi..." : "Commenter"}
-                </button>
-              </form>
-
-              {comments.length === 0 ? (
-                <p className="rounded-[20px] border border-dashed border-white/10 px-4 py-4 text-sm text-white/38">
-                  Aucun commentaire pour l’instant.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {comments.map((comment) => {
-                    const commentAuthor = getCommentAuthor(comment);
-                    const canDeleteComment = Boolean(currentUserId && comment.author_user_id === currentUserId);
-
-                    return (
-                      <div key={comment.id} className="flex gap-3 rounded-[22px] border border-white/6 bg-white/[0.025] p-4">
-                        {commentAuthor.type === "club" ? (
-                          <ClubLogo logoPath={comment.clubs?.logo_path} clubName={commentAuthor.name} size="sm" />
-                        ) : (
-                          <PlayerAvatar avatarPath={comment.player_profiles?.avatar_path} displayName={commentAuthor.name} size="sm" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-white">{commentAuthor.name}</p>
-                            <p className="text-[11px] uppercase tracking-[0.16em] text-white/30">
-                              {formatPostDate(comment.created_at)}
-                            </p>
-                          </div>
-                          <p className="mt-2 whitespace-pre-line break-words text-sm leading-7 text-white/62">
-                            {comment.text_content}
-                          </p>
-                          {canDeleteComment && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteComment(comment.id)}
-                              className="mt-2 text-xs text-red-300/70 transition hover:text-red-200"
-                            >
-                              Supprimer le commentaire
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       </article>
 
       {mounted && deleteOpen && createPortal(

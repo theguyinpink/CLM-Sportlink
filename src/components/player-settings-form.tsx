@@ -99,7 +99,7 @@ export default function PlayerSettingsForm({ profile }: PlayerSettingsFormProps)
               <select
                 name="preferred_contact_method"
                 defaultValue={profile.preferred_contact_method || "email"}
-                className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none"
+                className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
               >
                 <option value="email" className="bg-[#0a0a0a] text-white">
                   Email

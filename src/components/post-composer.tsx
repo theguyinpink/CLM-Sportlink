@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createPostFromClient } from "@/app/post-actions";
 import FileInput from "@/components/file-input";
 import { getPostContentTypesFor, type PostAuthorType, type PostMediaType } from "@/lib/posts";
-import { SPORT_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
+import { SPORT_OPTIONS, REGION_OPTIONS, withCurrentOption } from "@/lib/form-options";
 
 type PostComposerProps = {
   authorType: PostAuthorType;
@@ -185,9 +185,6 @@ export default function PostComposer({
           : "premium-card rounded-[34px] p-5 sm:p-6"
       }
     >
-      <OptionList id="post-sports" values={SPORT_OPTIONS} />
-      <OptionList id="post-regions" values={REGION_OPTIONS} />
-
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">
@@ -221,7 +218,7 @@ export default function PostComposer({
               <label className="mb-2 block text-sm text-white/55">Type de publication</label>
               <select
                 name="content_type"
-                className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none"
+                className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
                 defaultValue={contentTypes[0]?.value || "post-libre"}
               >
                 {contentTypes.map((item) => (
@@ -244,13 +241,16 @@ export default function PostComposer({
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm text-white/55">Sport</label>
-                <input
+                <select
                   name="sport"
-                  list="post-sports"
                   defaultValue={defaultSport || ""}
-                  placeholder="Basketball"
-                  className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-                />
+                  className="w-full rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
+                >
+                  <option value="" className="bg-[#07080f] text-white/50">Sélectionner</option>
+                  {withCurrentOption(SPORT_OPTIONS, defaultSport).map((sport) => (
+                    <option key={sport} value={sport} className="bg-[#07080f] text-white">{sport}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="mb-2 block text-sm text-white/55">Rayon</label>
@@ -277,13 +277,16 @@ export default function PostComposer({
               </div>
               <div>
                 <label className="mb-2 block text-sm text-white/55">Région</label>
-                <input
+                <select
                   name="region"
-                  list="post-regions"
                   defaultValue={defaultRegion || ""}
-                  placeholder="Île-de-France"
-                  className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-                />
+                  className="w-full rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
+                >
+                  <option value="" className="bg-[#07080f] text-white/50">Sélectionner</option>
+                  {withCurrentOption(REGION_OPTIONS, defaultRegion).map((region) => (
+                    <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -310,7 +313,7 @@ export default function PostComposer({
                 <select
                   value={mediaType}
                   onChange={(event) => setMediaType(event.target.value as PostMediaType)}
-                  className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none"
+                  className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
                 >
                   <option value="image" className="bg-[#07080f] text-white">Image</option>
                   <option value="video" className="bg-[#07080f] text-white">Vidéo</option>

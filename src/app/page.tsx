@@ -165,6 +165,11 @@ export default async function HomePage() {
 
         <div className="relative z-10 grid gap-12 lg:grid-cols-[minmax(0,1.1fr)_390px] lg:items-end">
           <div>
+            <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-white/58 animate-fade-up">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#35e6a5] shadow-[0_0_16px_rgba(53,230,165,0.8)]" />
+              Plateforme sportive · Joueurs · Clubs · Arbitres · Staff
+            </div>
+
             <h1
               className="font-display mt-7 max-w-5xl text-[3.45rem] uppercase leading-[0.86] text-white sm:text-[5.7rem] lg:text-[7.7rem] animate-fade-up"
               style={{ animationDelay: "90ms" }}

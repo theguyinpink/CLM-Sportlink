@@ -33,7 +33,7 @@ export default async function JoueurFeedPage({
 
   if (!profile) redirect("/app/joueur/profil/edit");
 
-  const [offersResponse, requestsResponse, savedResponse] = await Promise.all([
+  const [offersResponse, requestsResponse] = await Promise.all([
     supabase
       .from("club_offers")
       .select("*, clubs(id, club_name, sport, city, region, level, logo_path, description)")
@@ -44,16 +44,10 @@ export default async function JoueurFeedPage({
       .from("connection_requests")
       .select("id, status", { count: "exact" })
       .eq("player_profile_id", profile.id),
-    supabase
-      .from("saved_items")
-      .select("target_id")
-      .eq("user_id", user.id)
-      .eq("target_type", "club_offer"),
   ]);
 
   const activeOffers = offersResponse.data || [];
   const requests = requestsResponse.data || [];
-  const savedOfferIds = new Set((savedResponse.data || []).map((item: any) => item.target_id));
   const acceptedRequests = requests.filter((request) => request.status === "accepted").length;
 
   const scoredOffers = activeOffers
@@ -69,24 +63,6 @@ export default async function JoueurFeedPage({
 
   const topOffer = scoredOffers[0];
   const completion = calculatePlayerCompletion(profile);
-  const [{ count: playerPostCount }, { count: playerMediaCount }] = await Promise.all([
-    supabase
-      .from("posts")
-      .select("id", { count: "exact", head: true })
-      .or(`player_profile_id.eq.${profile.id},author_user_id.eq.${user.id},user_id.eq.${user.id}`),
-    supabase
-      .from("player_media")
-      .select("id", { count: "exact", head: true })
-      .eq("player_profile_id", profile.id),
-  ]);
-  const playerStarterSteps = [
-    { label: "Profil complété", done: completion.score === 100, href: "/app/joueur/profil" },
-    { label: "Photo de profil", done: Boolean(profile.avatar_path), href: "/app/joueur/parametres" },
-    { label: "Temps fort publié", done: (playerPostCount ?? 0) > 0, href: "/app/joueur/fil" },
-    { label: "Média ajouté", done: (playerMediaCount ?? 0) > 0, href: "/app/joueur/profil" },
-    { label: "Contact débloqué", done: acceptedRequests > 0, href: "/app/joueur/contacts" },
-  ];
-  const showPlayerStarter = playerStarterSteps.some((step) => !step.done);
 
   return (
     <main className="space-y-10">
@@ -139,25 +115,6 @@ export default async function JoueurFeedPage({
         ctaLabel="Compléter mon profil"
       />
 
-      {showPlayerStarter && (
-        <section className="premium-card rounded-[26px] p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Premiers pas</p>
-              <h2 className="mt-2 text-xl font-semibold text-[color:var(--text-main)]">À faire pour être prêt en bêta</h2>
-            </div>
-            <Link href="/app/joueur/profil" className="text-sm font-medium text-[color:var(--primary)]">Voir mon profil</Link>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {playerStarterSteps.map((step) => (
-              <Link key={step.label} href={step.href} className="rounded-[18px] border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-soft)]">
-                <span className={step.done ? "text-emerald-400" : "text-amber-400"}>{step.done ? "✓" : "•"}</span> {step.label}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section>
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
@@ -171,7 +128,7 @@ export default async function JoueurFeedPage({
             <EmptyState eyebrow="Aucune annonce" title="Aucune opportunité" description="Dès qu’un club publie une annonce active, elle apparaîtra ici avec son score." resetHref="/app/joueur/feed" />
           ) : (
             scoredOffers.slice(0, 5).map((item, index) => (
-              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/joueur/clubs/${item.club.id}`} index={index} isSaved={savedOfferIds.has(item.offer.id)} />
+              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/joueur/clubs/${item.club.id}`} index={index} />
             ))
           )}
         </div>

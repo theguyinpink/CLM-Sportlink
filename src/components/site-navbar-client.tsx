@@ -5,7 +5,6 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import CreateContentMenu from "@/components/create-content-menu";
-import ThemeToggle from "@/components/theme-toggle";
 
 type SiteNavbarClientProps = {
   isAuthenticated: boolean;
@@ -159,15 +158,15 @@ export default function SiteNavbarClient({
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-[color:var(--line)] bg-[color:var(--nav-bg)] backdrop-blur-xl">
-        <div className="relative flex h-[72px] w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 2xl:px-10">
+      <header className="sticky top-0 z-50 border-b border-white/8 bg-[#07080f]/78 backdrop-blur-2xl">
+        <div className="mx-auto flex h-[84px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link
             href={homeHref}
-            className="group relative z-10 flex min-w-0 items-center gap-3"
+            className="group flex min-w-0 items-center gap-3"
             onClick={closeMenu}
           >
-            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/10 bg-white/[0.035]">
-              <div className="absolute inset-0 bg-white/[0.02] opacity-80 transition group-hover:opacity-100" />
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border border-white/10 bg-white/[0.04] shadow-[0_0_45px_rgba(79,140,255,0.18)]">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#4f8cff]/20 via-transparent to-[#9b5cff]/20 opacity-80 transition group-hover:opacity-100" />
               <Image
                 src="/logo.png"
                 alt="CLM SportLink"
@@ -179,18 +178,24 @@ export default function SiteNavbarClient({
             </div>
 
             <div className="hidden min-w-0 sm:block">
-              <p className="font-display text-[1.38rem] leading-none text-[color:var(--text-main)] lg:text-[1.55rem]">
+              <p className="font-display text-[1.12rem] leading-none text-white">
                 CLM SportLink
               </p>
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#35e6a5] shadow-[0_0_14px_rgba(53,230,165,0.8)]" />
+                <p className="truncate text-[10px] uppercase tracking-[0.22em] text-white/38">
+                  Système de recrutement sportif
+                </p>
+              </div>
             </div>
           </Link>
 
-          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden w-[min(780px,calc(100vw-520px))] min-w-[420px] -translate-x-1/2 -translate-y-1/2 items-center justify-center lg:flex">
+          <div className="hidden min-w-0 flex-1 items-center justify-center lg:flex">
             <form
               onSubmit={handleSearch}
-              className="pointer-events-auto flex w-full items-center justify-between gap-3 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface)] px-2 py-2 shadow-sm transition focus-within:border-[color:var(--line-strong)] focus-within:bg-[color:var(--surface-strong)]"
+              className="flex w-full max-w-[650px] items-center justify-between gap-3 rounded-full border border-white/10 bg-white/[0.035] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition focus-within:border-[#4f8cff]/35 focus-within:bg-[#4f8cff]/5"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-3 px-3 text-[color:var(--text-muted)]">
+              <div className="flex min-w-0 flex-1 items-center gap-3 px-3 text-white/45">
                 <SearchIcon />
                 <input
                   value={search}
@@ -202,12 +207,12 @@ export default function SiteNavbarClient({
                         : "Rechercher une opportunité, un club, une ville..."
                       : "Rechercher un talent, un club, une ville..."
                   }
-                  className="min-w-0 flex-1 bg-transparent text-sm text-[color:var(--text-main)] outline-none placeholder:text-[color:var(--text-dim)]"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/38"
                 />
               </div>
 
               {!isAuthenticated ? (
-                <nav className="flex items-center gap-1 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] p-1">
+                <nav className="flex items-center gap-1 rounded-full border border-white/8 bg-[#07080f]/72 p-1">
                   {links.map((link) => (
                     <Link
                       key={link.href}
@@ -215,8 +220,8 @@ export default function SiteNavbarClient({
                       className={[
                         "rounded-full px-3.5 py-2 text-sm transition",
                         isActive(link.href)
-                          ? "nav-pill-active font-medium"
-                          : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--text-main)]",
+                          ? "bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] font-medium text-[#050612]"
+                          : "text-white/64 hover:bg-white/[0.05] hover:text-white",
                       ].join(" ")}
                     >
                       {link.label}
@@ -226,7 +231,7 @@ export default function SiteNavbarClient({
               ) : (
                 <button
                   type="submit"
-                  className="nav-search-submit rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition hover:opacity-90"
+                  className="rounded-full border border-white/8 bg-[#07080f]/72 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/62 transition hover:border-[#4f8cff]/35 hover:text-white"
                 >
                   Rechercher
                 </button>
@@ -234,20 +239,19 @@ export default function SiteNavbarClient({
             </form>
           </div>
 
-          <div className="relative z-10 flex shrink-0 items-center gap-2.5">
-            <ThemeToggle />
+          <div className="flex shrink-0 items-center gap-2.5">
             {!isAuthenticated ? (
               <>
                 <Link
                   href="/connexion"
-                  className="hidden rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] px-4 py-2.5 text-sm text-[color:var(--text-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--text-main)] sm:inline-flex"
+                  className="hidden rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10 sm:inline-flex"
                 >
                   Connexion
                 </Link>
 
                 <Link
                   href="/inscription/role"
-                  className="btn-primary hidden px-4 py-2.5 text-sm sm:inline-flex"
+                  className="hidden rounded-full bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] px-4 py-2.5 text-sm font-bold text-[#050612] shadow-[0_14px_45px_rgba(79,140,255,0.22)] transition hover:translate-y-[-1px] sm:inline-flex"
                 >
                   Créer un profil
                 </Link>
@@ -266,7 +270,7 @@ export default function SiteNavbarClient({
 
                 <Link
                   href={notificationsHref}
-                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] text-[color:var(--text-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--text-main)]"
+                  className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10"
                   aria-label="Notifications"
                 >
                   <BellIcon />
@@ -279,7 +283,7 @@ export default function SiteNavbarClient({
 
                 <Link
                   href={profileHref}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] text-[color:var(--text-soft)] transition hover:border-[color:var(--line-strong)] hover:text-[color:var(--text-main)]"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:border-[#9b5cff]/35 hover:bg-[#9b5cff]/10"
                   aria-label="Mon compte"
                 >
                   <UserIcon />
@@ -325,8 +329,8 @@ export default function SiteNavbarClient({
                 className={[
                   "block rounded-full px-4 py-3 text-sm transition animate-fade-up",
                   isActive(link.href)
-                    ? "nav-pill-active font-semibold"
-                    : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--text-main)]",
+                    ? "bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] font-semibold text-[#050612]"
+                    : "text-white/78 hover:bg-white/[0.05] hover:text-white",
                 ].join(" ")}
                 style={{ animationDelay: `${index * 60}ms` }}
               >
@@ -346,7 +350,7 @@ export default function SiteNavbarClient({
                 <Link
                   href="/inscription/role"
                   onClick={closeMenu}
-                  className="nav-search-submit block rounded-full px-4 py-3 text-sm font-bold"
+                  className="block rounded-full bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] px-4 py-3 text-sm font-bold text-[#050612]"
                 >
                   Créer un profil
                 </Link>

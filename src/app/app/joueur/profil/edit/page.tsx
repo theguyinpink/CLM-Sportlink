@@ -39,11 +39,7 @@ export default async function EditPlayerProfilePage({
         </p>
       </section>
 
-      <PlayerProfileForm
-        profile={profile}
-        defaultError={errorMessage}
-        initialRole={(user.user_metadata?.profile_role as "player" | "referee" | "staff") || "player"}
-      />
+      <PlayerProfileForm profile={profile} defaultError={errorMessage} />
     </main>
   );
 }

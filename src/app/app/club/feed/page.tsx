@@ -84,18 +84,6 @@ export default async function ClubFeedPage({
 
   const completion = calculateClubCompletion(club);
   const topPlayer = scoredPlayers[0];
-  const { count: clubPostCount } = await supabase
-    .from("posts")
-    .select("id", { count: "exact", head: true })
-    .or(`club_id.eq.${club.id},author_user_id.eq.${user.id},user_id.eq.${user.id}`);
-  const clubStarterSteps = [
-    { label: "Fiche complétée", done: completion.score === 100, href: "/app/club/profil" },
-    { label: "Logo ajouté", done: Boolean(club.logo_path), href: "/app/club/parametres" },
-    { label: "Annonce active", done: activeOffers.length > 0, href: "/app/club/annonces" },
-    { label: "Actualité publiée", done: (clubPostCount ?? 0) > 0, href: "/app/club/fil" },
-    { label: "Contact débloqué", done: acceptedRequests > 0, href: "/app/club/contacts" },
-  ];
-  const showClubStarter = clubStarterSteps.some((step) => !step.done);
 
   return (
     <main className="space-y-10">
@@ -147,25 +135,6 @@ export default async function ClubFeedPage({
         ctaHref="/app/club/profil/edit"
         ctaLabel="Améliorer ma fiche"
       />
-
-      {showClubStarter && (
-        <section className="premium-card rounded-[26px] p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Premiers pas</p>
-              <h2 className="mt-2 text-xl font-semibold text-[color:var(--text-main)]">À faire pour être prêt en bêta</h2>
-            </div>
-            <Link href="/app/club/profil" className="text-sm font-medium text-[color:var(--primary)]">Voir ma fiche</Link>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            {clubStarterSteps.map((step) => (
-              <Link key={step.label} href={step.href} className="rounded-[18px] border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--text-soft)]">
-                <span className={step.done ? "text-emerald-400" : "text-amber-400"}>{step.done ? "✓" : "•"}</span> {step.label}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section>
         <div className="mb-8 flex items-end justify-between gap-4">

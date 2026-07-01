@@ -110,15 +110,14 @@ export async function savePlayerProfileFromClient(
 
   const display_name = clean(input.display_name);
   const sport = clean(input.sport);
-  const roles_available = input.roles_available?.length ? input.roles_available : ["player"];
-  const hasPlayerRole = roles_available.includes("player");
-  const position = hasPlayerRole ? clean(input.position) : "";
-  const level = hasPlayerRole ? clean(input.level) : "";
+  const position = clean(input.position);
+  const level = clean(input.level);
   const city = clean(input.city);
   const region = clean(input.region);
   const bio = clean(input.bio);
   const contact_email = clean(input.contact_email);
   const phone = clean(input.phone);
+  const roles_available = input.roles_available?.length ? input.roles_available : ["player"];
   const referee_sports = clean(input.referee_sports);
   const referee_level = clean(input.referee_level);
   const referee_city = clean(input.referee_city);

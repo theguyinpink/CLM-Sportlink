@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { DM_Sans, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import SiteNavbar from "@/components/site-navbar";
-import ScrollToTopButton from "@/components/scroll-to-top-button";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -18,20 +16,8 @@ const bebasNeue = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: "CLM SportLink",
-  description: "Plateforme multi-sports de mise en relation entre joueurs, clubs, arbitres et staff.",
+  description: "Plateforme multi-sports de mise en relation entre joueurs et clubs.",
 };
-
-function ThemeScript() {
-  const code = `
-    try {
-      var stored = localStorage.getItem('clm-theme');
-      var theme = stored || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
-      document.documentElement.dataset.theme = theme;
-    } catch (e) {}
-  `;
-
-  return <Script id="clm-theme-script" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: code }} />;
-}
 
 export default function RootLayout({
   children,
@@ -39,18 +25,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <head>
-        <ThemeScript />
-      </head>
+    <html lang="fr">
       <body
         suppressHydrationWarning
-        className={`${dmSans.variable} ${bebasNeue.variable} min-h-screen antialiased`}
+        className={`${dmSans.variable} ${bebasNeue.variable} min-h-screen bg-[#07080f] text-white antialiased`}
       >
-        <div className="relative z-10 flex min-h-screen flex-col">
+        <div className="site-noise pointer-events-none fixed inset-0 z-0 opacity-[0.048]" />
+        <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_20%_0%,rgba(79,140,255,0.14),transparent_34%),radial-gradient(circle_at_84%_8%,rgba(155,92,255,0.13),transparent_30%),linear-gradient(180deg,transparent,rgba(5,6,18,0.78))]" />
+        <div className="relative z-10 flex min-h-screen flex-col text-white">
           <SiteNavbar />
           <main className="flex-1">{children}</main>
-          <ScrollToTopButton />
         </div>
       </body>
     </html>

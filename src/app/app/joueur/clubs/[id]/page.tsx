@@ -7,10 +7,6 @@ import OpportunityCard from "@/components/opportunity-card";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
 import { calculateOfferCompatibility, calculatePlayerClubCompatibility } from "@/lib/matching";
-import { getPublicPostsByClub } from "@/lib/post-feed";
-import PostCard from "@/components/post-card";
-import FavoriteButton from "@/components/favorite-button";
-import ReportButton from "@/components/report-button";
 
 export default async function PlayerClubDetailPage({
   params,
@@ -49,22 +45,12 @@ export default async function PlayerClubDetailPage({
     .eq("status", "accepted")
     .maybeSingle();
 
-  const [{ data: offers }, clubPosts, { data: savedClub }] = await Promise.all([
-    supabase
-      .from("club_offers")
-      .select("*")
-      .eq("club_id", club.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false }),
-    getPublicPostsByClub(supabase, club.id, club.user_id, 8),
-    supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("target_type", "club")
-      .eq("target_id", club.id)
-      .maybeSingle(),
-  ]);
+  const { data: offers } = await supabase
+    .from("club_offers")
+    .select("*")
+    .eq("club_id", club.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
   const clubMatch = calculatePlayerClubCompatibility(profile, club);
   const scoredOffers = (offers || []).map((offer) => ({ offer, match: calculateOfferCompatibility(profile, club, offer) })).sort((a, b) => b.match.score - a.match.score);
@@ -84,10 +70,6 @@ export default async function PlayerClubDetailPage({
 
           <div className="flex flex-col items-start gap-4 sm:items-end">
             <CompatibilityBadge match={clubMatch} />
-            <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
-              <FavoriteButton targetType="club" targetId={club.id} initialSaved={Boolean(savedClub?.id)} compact />
-              <ReportButton targetType="club" targetId={club.id} compact />
-            </div>
             {!acceptedRequest && (
               <form action={playerInterestedInClub}>
                 <input type="hidden" name="club_id" value={club.id} />
@@ -161,26 +143,7 @@ export default async function PlayerClubDetailPage({
         </div>
       </section>
 
-
-
-      <section className="space-y-8 border-t border-white/5 pt-8">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Médias & actualités</p>
-          <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts du club</h2>
-        </div>
-
-        {clubPosts.length === 0 ? (
-          <p className="text-white/68">Aucune actualité publiée par ce club pour le moment.</p>
-        ) : (
-          <div className="space-y-5">
-            {clubPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} currentUserId={user.id} viewerRole="player" index={index} />
-            ))}
-          </div>
-        )}
-      </section>
-
-            <Link href="/app/joueur/clubs" className="inline-flex text-sm text-white/68 transition hover:text-white">Retour aux clubs</Link>
+      <Link href="/app/joueur/clubs" className="inline-flex text-sm text-white/68 transition hover:text-white">Retour aux clubs</Link>
     </main>
   );
 }

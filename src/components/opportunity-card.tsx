@@ -3,8 +3,6 @@ import { playerInterestedInClub } from "@/app/connection-actions";
 import ClubLogo from "@/components/club-logo";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
-import FavoriteButton from "@/components/favorite-button";
-import ReportButton from "@/components/report-button";
 import { getCategoryLabel, getOfferType, getOfferTypeLabel, type CompatibilityResult } from "@/lib/matching";
 
 type OpportunityCardProps = {
@@ -14,7 +12,6 @@ type OpportunityCardProps = {
   href: string;
   canApply?: boolean;
   index?: number;
-  isSaved?: boolean;
 };
 
 export default function OpportunityCard({
@@ -24,38 +21,36 @@ export default function OpportunityCard({
   href,
   canApply = true,
   index = 0,
-  isSaved = false,
 }: OpportunityCardProps) {
   const offerType = getOfferType(offer.offer_type, offer.category);
-  const roleLabel = offerType === "staff" ? "Mission" : "Poste";
+  const roleLabel = offerType === "referee" ? "Rôle" : offerType === "staff" ? "Mission" : "Poste";
 
   return (
     <article
-      id={`offer-${offer.id}`}
-      className="premium-card animate-fade-up scroll-mt-28 rounded-[24px] p-5 transition premium-hover"
-      style={{ animationDelay: `${index * 40}ms` }}
+      className="premium-card animate-fade-up rounded-[34px] p-6 transition hover:-translate-y-1"
+      style={{ animationDelay: `${index * 50}ms` }}
     >
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <ClubLogo logoPath={club?.logo_path} clubName={club?.club_name || "Club"} size="md" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="ui-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
+              <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8ff5cf]">
                 {getOfferTypeLabel(offerType)}
               </span>
-              <span className="ui-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
+              <span className="rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">
                 {getCategoryLabel(offer.category)}
               </span>
-              <span className="ui-pill rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
-                {offer.sport || club?.sport || "Sport"}
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/50">
+                {club?.sport || "Sport"}
               </span>
             </div>
-            <h3 className="font-display mt-4 text-[1.55rem] leading-tight text-[color:var(--text-main)] sm:text-[1.85rem]">
+            <h3 className="font-display mt-4 text-[2.45rem] uppercase leading-[0.88] text-white">
               {offer.title}
             </h3>
-            <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
+            <p className="mt-3 text-sm text-white/62">
               {club?.club_name || "Club"}
-              {offerType !== "referee" && offer.position_needed ? ` • ${roleLabel} : ${offer.position_needed}` : ""}
+              {offer.position_needed ? ` • ${roleLabel} : ${offer.position_needed}` : ""}
               {offer.level_required ? ` • ${offer.level_required}` : ""}
               {offer.location || club?.city ? ` • ${offer.location || club?.city}` : ""}
             </p>
@@ -66,34 +61,32 @@ export default function OpportunityCard({
       </div>
 
       {(offer.event_date || offer.event_time || offer.remuneration) && (
-        <div className="mt-5 flex flex-wrap gap-2 text-xs leading-6 text-[color:var(--text-muted)]">
-          {offer.event_date && <span className="ui-pill rounded-full px-3 py-1">Date : {offer.event_date}</span>}
-          {offer.event_time && <span className="ui-pill rounded-full px-3 py-1">Horaire : {offer.event_time}</span>}
-          {offer.remuneration && <span className="ui-pill rounded-full px-3 py-1">Défraiement : {offer.remuneration}</span>}
+        <div className="mt-5 flex flex-wrap gap-2 text-xs text-white/58">
+          {offer.event_date && <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">Date : {offer.event_date}</span>}
+          {offer.event_time && <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">Horaire : {offer.event_time}</span>}
+          {offer.remuneration && <span className="rounded-full border border-white/8 bg-white/5 px-3 py-1">Défraiement : {offer.remuneration}</span>}
         </div>
       )}
 
-      <p className="mt-5 line-clamp-3 text-sm leading-8 text-[color:var(--text-soft)]">
+      <p className="mt-6 line-clamp-3 max-w-4xl text-sm leading-8 text-white/64">
         {offer.description || "Aucune description détaillée pour cette opportunité."}
       </p>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2">
         {match.reasons.slice(0, 5).map((reason) => (
           <InsightPill key={`${offer.id}-${reason.label}`} reason={reason} />
         ))}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <Link href={href} className="btn-secondary rounded-full px-5 py-3 text-sm font-medium">
+      <div className="mt-7 flex flex-wrap items-center gap-4">
+        <Link href={href} className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10">
           Voir le détail
         </Link>
-        <FavoriteButton targetType="club_offer" targetId={offer.id} initialSaved={isSaved} compact />
-        <ReportButton targetType="club_offer" targetId={offer.id} compact />
         {canApply && (
           <form action={playerInterestedInClub}>
             <input type="hidden" name="club_id" value={club?.id} />
             <input type="hidden" name="offer_id" value={offer.id} />
-            <button type="submit" className="btn-primary rounded-full px-5 py-3 text-sm font-semibold">
+            <button type="submit" className="rounded-full bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] px-5 py-3 text-sm font-bold text-[#050612] shadow-[0_14px_45px_rgba(79,140,255,0.22)] transition hover:-translate-y-0.5">
               Je suis intéressé
             </button>
           </form>

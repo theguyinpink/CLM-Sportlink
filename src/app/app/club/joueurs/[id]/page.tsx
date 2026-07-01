@@ -7,10 +7,6 @@ import PlayerMediaGrid from "@/components/player-media-grid";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
 import { calculateOfferCompatibility, calculatePlayerClubCompatibility, calculatePlayerCompletion } from "@/lib/matching";
-import { getPublicPostsByPlayerProfile } from "@/lib/post-feed";
-import PostCard from "@/components/post-card";
-import FavoriteButton from "@/components/favorite-button";
-import ReportButton from "@/components/report-button";
 
 export default async function ClubPlayerDetailPage({
   params,
@@ -51,7 +47,7 @@ export default async function ClubPlayerDetailPage({
     .eq("status", "accepted")
     .maybeSingle();
 
-  const [{ data: media }, { data: activeOffers }, playerPosts, { data: savedProfile }] = await Promise.all([
+  const [{ data: media }, { data: activeOffers }] = await Promise.all([
     supabase
       .from("player_media")
       .select("*")
@@ -64,14 +60,6 @@ export default async function ClubPlayerDetailPage({
       .eq("club_id", club.id)
       .eq("status", "active")
       .order("created_at", { ascending: false }),
-    getPublicPostsByPlayerProfile(supabase, player.id, player.user_id, 8),
-    supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("target_type", "player_profile")
-      .eq("target_id", player.id)
-      .maybeSingle(),
   ]);
 
   const offerMatches = (activeOffers || [])
@@ -102,10 +90,6 @@ export default async function ClubPlayerDetailPage({
                 Score basé sur : {bestOfferMatch.offer.title}
               </p>
             )}
-            <div className="flex flex-wrap justify-start gap-3 sm:justify-end">
-              <FavoriteButton targetType="player_profile" targetId={player.id} initialSaved={Boolean(savedProfile?.id)} compact />
-              <ReportButton targetType="player_profile" targetId={player.id} compact />
-            </div>
             {!acceptedRequest && (
               <form action={clubInterestedInPlayer}>
                 <input type="hidden" name="player_profile_id" value={player.id} />
@@ -178,27 +162,15 @@ export default async function ClubPlayerDetailPage({
         </div>
       </section>
 
-      <section className="space-y-8 border-t border-white/5 pt-8">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Médias & actualités</p>
-          <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts</h2>
-        </div>
-
-        {media && media.length > 0 && <PlayerMediaGrid media={media} />}
-
-        {playerPosts.length > 0 && (
-          <div className="space-y-5">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Publications récentes</p>
-            {playerPosts.map((post, index) => (
-              <PostCard key={post.id} post={post} currentUserId={user.id} viewerRole="club" index={index} />
-            ))}
+      {media && media.length > 0 && (
+        <section className="space-y-8 border-t border-white/5 pt-8">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Médias</p>
+            <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts</h2>
           </div>
-        )}
-
-        {(!media || media.length === 0) && playerPosts.length === 0 && (
-          <p className="text-white/62">Aucun temps fort public pour le moment.</p>
-        )}
-      </section>
+          <PlayerMediaGrid media={media} />
+        </section>
+      )}
 
       <Link href="/app/club/joueurs" className="inline-flex text-sm text-white/68 transition hover:text-white">Retour aux joueurs</Link>
     </main>

@@ -3,10 +3,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import PlayerAvatar from "@/components/player-avatar";
 import PlayerMediaGrid from "@/components/player-media-grid";
+import OnboardingCard from "@/components/onboarding-card";
 import ContactCounterModal from "@/components/contact-counter-modal";
-import PostCard from "@/components/post-card";
 import { calculatePlayerCompletion, getOfferTypeLabel } from "@/lib/matching";
-import { getPublicPostsByPlayerProfile } from "@/lib/post-feed";
 
 export default async function PlayerProfilePage() {
   const supabase = await createClient();
@@ -24,7 +23,7 @@ export default async function PlayerProfilePage() {
 
   if (!profile) redirect("/app/joueur/profil/edit");
 
-  const [{ data: media }, { data: acceptedRequests }, profilePosts] = await Promise.all([
+  const [{ data: media }, { data: acceptedRequests }] = await Promise.all([
     supabase
       .from("player_media")
       .select("*")
@@ -37,7 +36,6 @@ export default async function PlayerProfilePage() {
       .eq("player_profile_id", profile.id)
       .eq("status", "accepted")
       .order("responded_at", { ascending: false }),
-    getPublicPostsByPlayerProfile(supabase, profile.id, profile.user_id, 8),
   ]);
 
   const contacts = (acceptedRequests || [])
@@ -56,159 +54,117 @@ export default async function PlayerProfilePage() {
     .filter(Boolean);
 
   const completion = calculatePlayerCompletion(profile);
-  const missing = completion.checks.filter((check) => !check.done).slice(0, 4);
   const roles = Array.isArray(profile.roles_available)
     ? profile.roles_available
-    : String(profile.roles_available || "player")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
-  const isPlayer = roles.includes("player");
-  const hasReferee = roles.includes("referee");
-  const hasStaff = roles.includes("staff");
-
-  const subtitle = [
-    profile.sport,
-    isPlayer ? profile.position : null,
-    isPlayer ? profile.level : null,
-    profile.city || profile.region,
-  ]
-    .filter(Boolean)
-    .join(" • ");
+    : String(profile.roles_available || "player").split(",").map((item) => item.trim()).filter(Boolean);
 
   return (
-    <main className="profile-shell">
-      <section className="profile-hero-grid">
-        <div className="premium-card rounded-[28px] p-6 sm:p-8">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex min-w-0 items-start gap-5">
-              <PlayerAvatar avatarPath={profile.avatar_path} displayName={profile.display_name} size="lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Profil sportif</p>
-                  {completion.score === 100 && <span className="ui-pill rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">Profil complété</span>}
-                  <span className="ui-pill rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]">Actif récemment</span>
-                </div>
-                <h1 className="font-display mt-3 text-[2.7rem] leading-[0.98] text-[color:var(--text-main)] sm:text-[3.6rem]">
-                  {profile.display_name}
-                </h1>
-                {subtitle && <p className="mt-3 text-sm leading-7 text-[color:var(--text-soft)]">{subtitle}</p>}
-
-                <div className="profile-stats mt-5">
-                  {isPlayer && (
-                    <>
-                      <div className="profile-stat">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Poste</p>
-                        <p className="mt-2 font-medium text-[color:var(--text-main)]">{profile.position || "À compléter"}</p>
-                      </div>
-                      <div className="profile-stat">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Niveau</p>
-                        <p className="mt-2 font-medium text-[color:var(--text-main)]">{profile.level || "À compléter"}</p>
-                      </div>
-                    </>
-                  )}
-                  <div className="profile-stat">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Zone</p>
-                    <p className="mt-2 font-medium text-[color:var(--text-main)]">{profile.city || profile.region || "À compléter"}</p>
-                  </div>
-                  <div className="profile-stat">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Rôle</p>
-                    <p className="mt-2 font-medium text-[color:var(--text-main)]">{roles.map((role: string) => getOfferTypeLabel(role)).join(" • ")}</p>
-                  </div>
-                  <ContactCounterModal label="Contacts" contacts={contacts as any} variant="stat" />
-                </div>
+    <main className="space-y-14">
+      <section className="premium-card rounded-[40px] p-7 sm:p-9">
+        <div className="flex flex-wrap items-start justify-between gap-8">
+          <div className="flex items-start gap-5">
+            <PlayerAvatar avatarPath={profile.avatar_path} displayName={profile.display_name} size="lg" />
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">CV sportif joueur</p>
+              <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem]">{profile.display_name}</h1>
+              <p className="mt-4 text-white/68">{profile.sport}{profile.position ? ` • ${profile.position}` : ""}{profile.level ? ` • ${profile.level}` : ""}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {roles.map((role: string) => (
+                  <span key={role} className="rounded-full border border-[#35e6a5]/20 bg-[#35e6a5]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8ff5cf]">
+                    {getOfferTypeLabel(role)}
+                  </span>
+                ))}
               </div>
             </div>
-
-            <Link href="/app/joueur/profil/edit" className="btn-secondary rounded-full px-5 py-3 text-sm font-medium">
-              Modifier
-            </Link>
           </div>
 
-          {profile.bio && (
-            <div className="mt-7 border-t border-[color:var(--line)] pt-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Bio</p>
-              <p className="mt-3 max-w-5xl whitespace-pre-line text-base leading-8 text-[color:var(--text-soft)]">{profile.bio}</p>
-            </div>
-          )}
+          <Link href="/app/joueur/profil/edit" className="rounded-full border border-white/10 px-5 py-3 text-sm text-white transition hover:bg-white/4">Modifier</Link>
         </div>
-
-        {completion.score < 100 && (
-          <aside className="compact-completion">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Profil complété</p>
-                <p className="mt-2 text-3xl font-semibold text-[color:var(--text-main)]">{completion.score}%</p>
-              </div>
-              <Link href="/app/joueur/profil/edit" className="rounded-full border border-[color:var(--line)] px-3 py-2 text-xs font-medium text-[color:var(--primary)]">
-                Compléter
-              </Link>
-            </div>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--surface)]">
-              <div className="h-full rounded-full bg-[color:var(--primary)]" style={{ width: `${Math.max(8, Math.min(100, completion.score))}%` }} />
-            </div>
-            {missing.length > 0 && (
-              <p className="mt-4 text-sm leading-7 text-[color:var(--text-muted)]">
-                À compléter : {missing.map((item) => item.label).join(", ")}.
-              </p>
-            )}
-          </aside>
-        )}
       </section>
 
-      {(hasReferee || hasStaff) && (
-        <section className="grid gap-4 xl:grid-cols-2">
-          {hasReferee && (
-            <div className="premium-card rounded-[24px] p-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Disponibilités arbitre</p>
-              <p className="mt-4 text-sm leading-8 text-[color:var(--text-soft)]">
-                {profile.referee_sports || profile.sport || "Sport non renseigné"}
-                {profile.referee_level ? ` • ${profile.referee_level}` : ""}
-                {profile.referee_city ? ` • ${profile.referee_city}` : ""}
-                {profile.referee_radius_km ? ` • ${profile.referee_radius_km} km` : ""}
-              </p>
-              {(profile.referee_availability || profile.referee_experience) && (
-                <p className="mt-3 whitespace-pre-line text-sm leading-8 text-[color:var(--text-muted)]">
-                  {[profile.referee_availability, profile.referee_experience].filter(Boolean).join("\n")}
-                </p>
+      <OnboardingCard
+        title="Qualité du CV sportif"
+        description="Cette jauge indique si ton profil donne assez de matière aux clubs pour te comprendre rapidement."
+        score={completion.score}
+        checks={completion.checks}
+        ctaHref="/app/joueur/parametres"
+        ctaLabel="Ajouter avatar ou médias"
+      />
+
+      <section className="grid gap-6 lg:grid-cols-5">
+        <div className="premium-card rounded-[28px] p-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Poste</p>
+          <p className="mt-3 text-white">{profile.position || "Non renseigné"}</p>
+        </div>
+        <div className="premium-card rounded-[28px] p-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Niveau</p>
+          <p className="mt-3 text-white">{profile.level || "Non renseigné"}</p>
+        </div>
+        <div className="premium-card rounded-[28px] p-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Zone</p>
+          <p className="mt-3 text-white">{profile.city || profile.region || "Non renseignée"}</p>
+        </div>
+        <div className="premium-card rounded-[28px] p-5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Rôles</p>
+          <p className="mt-3 text-white">{roles.map((role: string) => getOfferTypeLabel(role)).join(" • ")}</p>
+        </div>
+        <ContactCounterModal label="Nombre de contacts" contacts={contacts as any} />
+      </section>
+
+      <section className="grid gap-16 border-t border-white/5 pt-8 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="space-y-8">
+
+          {(roles.includes("referee") || roles.includes("staff")) && (
+            <div className="premium-card rounded-[30px] p-6">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Disponibilités élargies</p>
+              {roles.includes("referee") && (
+                <div className="mt-5 border-b border-white/5 pb-5">
+                  <p className="text-sm font-semibold text-[#8ff5cf]">Arbitrage</p>
+                  <p className="mt-3 text-sm leading-7 text-white/68">
+                    {profile.referee_sports || profile.sport || "Sport non renseigné"}
+                    {profile.referee_level ? ` • ${profile.referee_level}` : ""}
+                    {profile.referee_city ? ` • ${profile.referee_city}` : ""}
+                    {profile.referee_radius_km ? ` • ${profile.referee_radius_km} km` : ""}
+                  </p>
+                  {(profile.referee_availability || profile.referee_experience) && (
+                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/55">
+                      {[profile.referee_availability, profile.referee_experience].filter(Boolean).join("\n") }
+                    </p>
+                  )}
+                </div>
+              )}
+              {roles.includes("staff") && (
+                <div className="mt-5">
+                  <p className="text-sm font-semibold text-[#8bb7ff]">Coach / staff</p>
+                  <p className="mt-3 text-sm leading-7 text-white/68">{profile.staff_roles || "Rôle staff non renseigné"}</p>
+                  {profile.staff_experience && <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/55">{profile.staff_experience}</p>}
+                </div>
               )}
             </div>
           )}
-
-          {hasStaff && (
-            <div className="premium-card rounded-[24px] p-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--text-muted)]">Coach / staff</p>
-              <p className="mt-4 text-sm leading-8 text-[color:var(--text-soft)]">{profile.staff_roles || "Rôle staff non renseigné"}</p>
-              {profile.staff_experience && <p className="mt-3 whitespace-pre-line text-sm leading-8 text-[color:var(--text-muted)]">{profile.staff_experience}</p>}
+          <div className="premium-card rounded-[30px] p-6">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Contact</p>
+            <div className="mt-5 space-y-4 text-white/72">
+              <p>Email : {profile.contact_email || "Non renseigné"}</p>
+              <p>Téléphone : {profile.phone || "Non renseigné"}</p>
+              <p>Email visible après accord : {profile.contact_email_visible_after_accept ? "Oui" : "Non"}</p>
+              <p>Téléphone visible après accord : {profile.phone_visible_after_accept ? "Oui" : "Non"}</p>
             </div>
-          )}
-        </section>
-      )}
-
-      <section className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Médias & actualités</p>
-            <h2 className="font-display mt-2 text-[2rem] leading-tight text-[color:var(--text-main)]">Temps forts</h2>
           </div>
-          <Link href="/app/joueur/fil" className="text-sm font-medium text-[color:var(--primary)]">Publier une actualité</Link>
         </div>
 
-        {media && media.length > 0 && <PlayerMediaGrid media={media} />}
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Résumé sportif</p>
+          <p className="mt-5 whitespace-pre-line text-base leading-9 text-white/68">{profile.bio || "Aucune bio pour le moment."}</p>
+        </div>
+      </section>
 
-        {profilePosts.length > 0 && (
-          <div className="post-list-wide">
-            {profilePosts.map((post, index) => (
-              <PostCard key={post.id} post={post} currentUserId={user.id} viewerRole="player" index={index} />
-            ))}
-          </div>
-        )}
-
-        {(!media || media.length === 0) && profilePosts.length === 0 && (
-          <div className="premium-card rounded-[24px] p-6 text-[color:var(--text-muted)]">
-            Aucun temps fort pour le moment. Publie une actualité avec une image ou une vidéo pour l’afficher ici.
-          </div>
-        )}
+      <section className="space-y-8 border-t border-white/5 pt-8">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Médias</p>
+          <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts</h2>
+        </div>
+        {media && media.length > 0 ? <PlayerMediaGrid media={media} /> : <p className="text-white/62">Aucun média pour le moment. Ajoute des photos ou liens depuis les paramètres.</p>}
       </section>
     </main>
   );

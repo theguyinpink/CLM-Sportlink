@@ -11,7 +11,6 @@ type ActionResult = {
 
 type CreateClubOfferInput = {
   title: string;
-  sport?: string | null;
   offer_type?: string | null;
   category: string;
   description: string;
@@ -73,14 +72,14 @@ async function getOwnedClubId() {
 
   const { data: club, error } = await supabase
     .from("clubs")
-    .select("id, sport")
+    .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) return { supabase, clubId: null, error: error.message };
   if (!club) return { supabase, clubId: null, error: "Crée d'abord ta fiche club." };
 
-  return { supabase, clubId: club.id as string, clubSport: clean((club as { sport?: string | null }).sport), error: null };
+  return { supabase, clubId: club.id as string, error: null };
 }
 
 function revalidateOfferPages() {
@@ -97,7 +96,7 @@ function revalidateOfferPages() {
 export async function createClubOfferFromClient(
   input: CreateClubOfferInput,
 ): Promise<ActionResult> {
-  const { supabase, clubId, clubSport, error: ownershipError } = await getOwnedClubId();
+  const { supabase, clubId, error: ownershipError } = await getOwnedClubId();
 
   if (ownershipError || !clubId) {
     return { ok: false, error: ownershipError || "Club introuvable." };
@@ -106,9 +105,8 @@ export async function createClubOfferFromClient(
   const title = clean(input.title);
   const offer_type = normalizeOfferType(input.offer_type);
   const category = categoryForType(clean(input.category), offer_type);
-  const sport = clean(input.sport) || clubSport || "";
   const description = clean(input.description);
-  const position_needed = offer_type === "referee" ? "Arbitre" : clean(input.position_needed);
+  const position_needed = clean(input.position_needed);
   const level_required = clean(input.level_required);
   const location = clean(input.location);
   const event_date = clean(input.event_date) || null;
@@ -132,7 +130,6 @@ export async function createClubOfferFromClient(
     title,
     offer_type,
     category,
-    sport,
     description,
     position_needed,
     level_required,
@@ -160,7 +157,6 @@ export async function createClubOffer(formData: FormData) {
     title: String(formData.get("title") || ""),
     offer_type: String(formData.get("offer_type") || "player"),
     category: String(formData.get("category") || "recrutement"),
-    sport: String(formData.get("sport") || ""),
     description: String(formData.get("description") || ""),
     position_needed: String(formData.get("position_needed") || ""),
     level_required: String(formData.get("level_required") || ""),
@@ -187,7 +183,7 @@ type UpdateClubOfferInput = CreateClubOfferInput & {
 export async function updateClubOfferFromClient(
   input: UpdateClubOfferInput,
 ): Promise<ActionResult> {
-  const { supabase, clubId, clubSport, error: ownershipError } = await getOwnedClubId();
+  const { supabase, clubId, error: ownershipError } = await getOwnedClubId();
 
   if (ownershipError || !clubId) {
     return { ok: false, error: ownershipError || "Club introuvable." };
@@ -197,9 +193,8 @@ export async function updateClubOfferFromClient(
   const title = clean(input.title);
   const offer_type = normalizeOfferType(input.offer_type);
   const category = categoryForType(clean(input.category), offer_type);
-  const sport = clean(input.sport) || clubSport || "";
   const description = clean(input.description);
-  const position_needed = offer_type === "referee" ? "Arbitre" : clean(input.position_needed);
+  const position_needed = clean(input.position_needed);
   const level_required = clean(input.level_required);
   const location = clean(input.location);
   const status = clean(input.status) || "active";
@@ -226,7 +221,6 @@ export async function updateClubOfferFromClient(
       title,
       offer_type,
       category,
-      sport,
       description,
       position_needed,
       level_required,

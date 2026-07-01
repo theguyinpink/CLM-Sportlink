@@ -85,20 +85,20 @@ export default async function JoueurDemandesPage({
       </section>
 
       <section className="rounded-[28px] border border-white/8 bg-white/2 p-5">
-        <form className="ui-filter-grid gap-4">
-          <select name="scope" defaultValue={scope} className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none">
+        <form className="grid gap-4 lg:grid-cols-3">
+          <select name="scope" defaultValue={scope} className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
             <option value="all" className="bg-[#07080f] text-white">Toutes</option>
             <option value="sent" className="bg-[#07080f] text-white">Envoyées</option>
             <option value="received" className="bg-[#07080f] text-white">Reçues</option>
           </select>
-          <select name="status" defaultValue={status} className="ui-select w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none">
+          <select name="status" defaultValue={status} className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
             <option value="all" className="bg-[#07080f] text-white">Tous statuts</option>
             <option value="pending" className="bg-[#07080f] text-white">En attente</option>
             <option value="accepted" className="bg-[#07080f] text-white">Acceptées</option>
             <option value="refused" className="bg-[#07080f] text-white">Refusées</option>
           </select>
-          <div className="flex flex-wrap gap-3">
-            <select name="sort" defaultValue={sort} className="ui-select min-w-[190px] flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm leading-6 text-white outline-none">
+          <div className="flex gap-3">
+            <select name="sort" defaultValue={sort} className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
               <option value="recent" className="bg-[#07080f] text-white">Plus récentes</option>
               <option value="oldest" className="bg-[#07080f] text-white">Plus anciennes</option>
             </select>
@@ -123,8 +123,8 @@ export default async function JoueurDemandesPage({
                   <ClubLogo logoPath={item.club?.logo_path} clubName={item.club?.club_name || "Club"} size="md" />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`ui-pill rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em] ${statusClass(item.status)}`}>{statusLabel(item.status)}</span>
-                      <span className="ui-pill rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
+                      <span className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.16em] ${statusClass(item.status)}`}>{statusLabel(item.status)}</span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
                         {item.direction === "sent" ? "Envoyée" : "Reçue"}
                       </span>
                     </div>

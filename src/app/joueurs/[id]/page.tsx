@@ -4,9 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import PlayerAvatar from "@/components/player-avatar";
 import PlayerMediaGrid from "@/components/player-media-grid";
 import OnboardingCard from "@/components/onboarding-card";
-import PostCard from "@/components/post-card";
 import { calculatePlayerCompletion } from "@/lib/matching";
-import { getPublicPostsByPlayerProfile } from "@/lib/post-feed";
 
 export default async function PublicPlayerDetailPage({
   params,
@@ -26,10 +24,6 @@ export default async function PublicPlayerDetailPage({
   if (!player) notFound();
 
   const media = (player.player_media || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
-  const [{ data: { user } }, profilePosts] = await Promise.all([
-    supabase.auth.getUser(),
-    getPublicPostsByPlayerProfile(supabase, player.id, player.user_id, 8),
-  ]);
   const completion = calculatePlayerCompletion(player);
 
   return (
@@ -63,27 +57,12 @@ export default async function PublicPlayerDetailPage({
         </div>
       </section>
 
-      <section className="mt-16 space-y-8 border-t border-white/5 pt-8">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Médias & actualités</p>
-          <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">Temps forts</h2>
-        </div>
-
-        {media.length > 0 && <PlayerMediaGrid media={media} />}
-
-        {profilePosts.length > 0 && (
-          <div className="space-y-5">
-            <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Publications récentes</p>
-            {profilePosts.map((post, index) => (
-              <PostCard key={post.id} post={post} currentUserId={user?.id} viewerRole="player" index={index} />
-            ))}
-          </div>
-        )}
-
-        {media.length === 0 && profilePosts.length === 0 && (
-          <p className="text-white/68">Aucun temps fort public pour le moment.</p>
-        )}
-      </section>
+      {media.length > 0 && (
+        <section className="mt-16 border-t border-white/5 pt-8">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Médias</p>
+          <div className="mt-6"><PlayerMediaGrid media={media} /></div>
+        </section>
+      )}
     </main>
   );
 }

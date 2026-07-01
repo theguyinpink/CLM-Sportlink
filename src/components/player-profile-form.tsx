@@ -3,29 +3,65 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LEVEL_OPTIONS,
-  POSITION_OPTIONS,
   PROFILE_ROLE_OPTIONS,
   REFEREE_LEVEL_OPTIONS,
   REGION_OPTIONS,
   SPORT_OPTIONS,
   STAFF_ROLE_OPTIONS,
+  getSportFieldLabel,
+  getSportFieldPlaceholder,
+  getSportLevels,
+  getSportPositions,
+  withCurrentOption,
 } from "@/lib/form-options";
 import { savePlayerProfileFromClient } from "@/app/profile-actions";
 
 type PlayerProfileFormProps = {
   profile?: any;
   defaultError?: string;
-  initialRole?: "player" | "referee" | "staff";
 };
 
-function OptionList({ id, values }: { id: string; values: string[] }) {
+const selectClass = "w-full rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none transition focus:border-[#4f8cff]/45";
+const inputClass = "w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30";
+
+function SelectField({
+  name,
+  label,
+  value,
+  defaultValue,
+  options,
+  onChange,
+  required,
+}: {
+  name: string;
+  label: string;
+  value?: string;
+  defaultValue?: string;
+  options: string[];
+  onChange?: (value: string) => void;
+  required?: boolean;
+}) {
   return (
-    <datalist id={id}>
-      {values.map((value) => (
-        <option key={value} value={value} />
-      ))}
-    </datalist>
+    <div>
+      <label className="mb-2 block text-sm text-white/55">{label}</label>
+      <select
+        name={name}
+        value={value}
+        defaultValue={value === undefined ? defaultValue : undefined}
+        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
+        required={required}
+        className={selectClass}
+      >
+        <option value="" className="bg-[#07080f] text-white/50">
+          Sélectionner
+        </option>
+        {options.map((option) => (
+          <option key={`${name}-${option}`} value={option} className="bg-[#07080f] text-white">
+            {option}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -44,16 +80,14 @@ function readRoles(value: any) {
     .filter(Boolean);
 }
 
-export default function PlayerProfileForm({ profile, defaultError, initialRole = "player" }: PlayerProfileFormProps) {
+export default function PlayerProfileForm({ profile, defaultError }: PlayerProfileFormProps) {
   const router = useRouter();
   const [error, setError] = useState(defaultError || "");
   const [loading, setLoading] = useState(false);
-  const initialRoles = useMemo(() => {
-    const profileRoles = readRoles(profile?.roles_available);
-    if (profile?.roles_available) return profileRoles;
-    return [initialRole || "player"];
-  }, [profile?.roles_available, initialRole]);
+  const initialRoles = useMemo(() => readRoles(profile?.roles_available), [profile?.roles_available]);
   const [roles, setRoles] = useState<string[]>(initialRoles.length ? initialRoles : ["player"]);
+  const [sport, setSport] = useState(profile?.sport || "");
+  const [refereeSport, setRefereeSport] = useState(profile?.referee_sports || profile?.sport || "");
 
   function toggleRole(role: string) {
     setRoles((current) => {
@@ -69,14 +103,12 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
 
     const formData = new FormData(event.currentTarget);
     const refereeRadiusRaw = String(formData.get("referee_radius_km") || "").trim();
-    const selectedRoles = formData.getAll("roles_available").map(String);
-    const hasPlayerRole = selectedRoles.includes("player");
 
     const result = await savePlayerProfileFromClient({
       display_name: String(formData.get("display_name") || "").trim(),
       sport: String(formData.get("sport") || "").trim(),
-      position: hasPlayerRole ? String(formData.get("position") || "").trim() : "",
-      level: hasPlayerRole ? String(formData.get("level") || "").trim() : "",
+      position: String(formData.get("position") || "").trim(),
+      level: String(formData.get("level") || "").trim(),
       city: String(formData.get("city") || "").trim(),
       region: String(formData.get("region") || "").trim(),
       bio: String(formData.get("bio") || "").trim(),
@@ -85,7 +117,7 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
       contact_email_visible_after_accept:
         formData.get("contact_email_visible_after_accept") === "on",
       phone_visible_after_accept: formData.get("phone_visible_after_accept") === "on",
-      roles_available: selectedRoles,
+      roles_available: formData.getAll("roles_available").map(String),
       referee_sports: String(formData.get("referee_sports") || "").trim(),
       referee_level: String(formData.get("referee_level") || "").trim(),
       referee_city: String(formData.get("referee_city") || "").trim(),
@@ -106,14 +138,13 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
     router.refresh();
   }
 
-  const isPlayer = roles.includes("player");
   const isReferee = roles.includes("referee");
   const isStaff = roles.includes("staff");
-  const bioPlaceholder = isPlayer
-    ? "Décris ton style de jeu, ton projet, tes qualités, ta disponibilité..."
-    : isReferee
-      ? "Présente ton expérience d’arbitrage, tes disponibilités et les types de rencontres que tu peux encadrer..."
-      : "Présente ton rôle, ton expérience, tes disponibilités et les groupes que tu peux accompagner...";
+  const playerLevels = withCurrentOption(getSportLevels(sport), profile?.level);
+  const playerPositions = withCurrentOption(getSportPositions(sport), profile?.position);
+  const refereeLevels = withCurrentOption(REFEREE_LEVEL_OPTIONS, profile?.referee_level);
+  const refereeSports = withCurrentOption(SPORT_OPTIONS, profile?.referee_sports || profile?.sport);
+  const regions = withCurrentOption(REGION_OPTIONS, profile?.region);
 
   return (
     <>
@@ -123,13 +154,6 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
         </div>
       )}
 
-      <OptionList id="sports" values={SPORT_OPTIONS} />
-      <OptionList id="positions" values={POSITION_OPTIONS} />
-      <OptionList id="levels" values={LEVEL_OPTIONS} />
-      <OptionList id="referee-levels" values={REFEREE_LEVEL_OPTIONS} />
-      <OptionList id="regions" values={REGION_OPTIONS} />
-      <OptionList id="staff-roles" values={STAFF_ROLE_OPTIONS} />
-
       <form onSubmit={handleSubmit} className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-7">
           <div>
@@ -138,54 +162,32 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
               name="display_name"
               defaultValue={profile?.display_name ?? ""}
               required
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-white/55">Sport principal</label>
-            <input
-              name="sport"
-              list="sports"
-              defaultValue={profile?.sport ?? ""}
-              required
-              placeholder="Basketball"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-            />
-            <p className="mt-2 text-xs text-white/35">Astuce : choisis la même écriture côté joueur, club et annonce.</p>
-          </div>
+          <SelectField
+            name="sport"
+            label="Sport principal"
+            value={sport}
+            onChange={(value) => setSport(value)}
+            options={withCurrentOption(SPORT_OPTIONS, profile?.sport)}
+            required
+          />
 
-          {isPlayer && (
-            <div className="premium-card rounded-[28px] p-5">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Informations joueur</p>
-              <p className="mt-3 text-xs leading-6 text-white/42">
-                Ces champs s’affichent uniquement si le rôle Joueur est coché.
-              </p>
-              <div className="mt-5 space-y-7">
-                <div>
-                  <label className="mb-2 block text-sm text-white/55">Poste joueur</label>
-                  <input
-                    name="position"
-                    list="positions"
-                    defaultValue={profile?.position ?? ""}
-                    placeholder="Ailier"
-                    className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-                  />
-                </div>
+          <SelectField
+            name="position"
+            label={getSportFieldLabel(sport)}
+            defaultValue={profile?.position ?? ""}
+            options={playerPositions}
+          />
 
-                <div>
-                  <label className="mb-2 block text-sm text-white/55">Niveau joueur</label>
-                  <input
-                    name="level"
-                    list="levels"
-                    defaultValue={profile?.level ?? ""}
-                    placeholder="Régional"
-                    className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          <SelectField
+            name="level"
+            label="Niveau joueur"
+            defaultValue={profile?.level ?? ""}
+            options={playerLevels}
+          />
 
           <div>
             <label className="mb-2 block text-sm text-white/55">Ville</label>
@@ -193,25 +195,21 @@ export default function PlayerProfileForm({ profile, defaultError, initialRole =
               name="city"
               defaultValue={profile?.city ?? ""}
               placeholder="Combs-la-Ville"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-white/55">Région</label>
-            <input
-              name="region"
-              list="regions"
-              defaultValue={profile?.region ?? ""}
-              placeholder="Île-de-France"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-            />
-          </div>
+          <SelectField
+            name="region"
+            label="Région"
+            defaultValue={profile?.region ?? ""}
+            options={regions}
+          />
 
           <div className="premium-card rounded-[28px] p-5">
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Rôles disponibles</p>
             <p className="mt-3 text-xs leading-6 text-white/42">
-Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuvent être cochés si tu es disponible sur plusieurs missions.
+              Tu peux rester joueur, mais aussi indiquer que tu es disponible comme arbitre ou staff.
             </p>
             <div className="mt-5 grid gap-3">
               {PROFILE_ROLE_OPTIONS.map((option) => (
@@ -242,7 +240,7 @@ Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuv
               defaultValue={profile?.bio ?? ""}
               rows={8}
               className="w-full rounded-[28px] border border-white/8 bg-white/[0.02] px-5 py-5 text-white outline-none placeholder:text-white/30"
-              placeholder={bioPlaceholder}
+              placeholder={`Décris ton projet, tes qualités, ta disponibilité et ton profil ${getSportFieldPlaceholder(sport).toLowerCase()}...`}
             />
           </div>
 
@@ -251,21 +249,26 @@ Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuv
               <p className="text-[11px] uppercase tracking-[0.24em] text-[#35e6a5]">Arbitrage</p>
               <h3 className="font-display mt-3 text-[2rem] uppercase leading-[0.95] text-white">Disponibilité arbitre</h3>
               <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm text-white/55">Sport arbitré</label>
-                  <input name="referee_sports" list="sports" defaultValue={profile?.referee_sports ?? profile?.sport ?? ""} placeholder="Basketball" className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm text-white/55">Niveau d’arbitrage</label>
-                  <input name="referee_level" list="referee-levels" defaultValue={profile?.referee_level ?? ""} placeholder="Départemental" className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
-                </div>
+                <SelectField
+                  name="referee_sports"
+                  label="Sport arbitré"
+                  value={refereeSport}
+                  onChange={(value) => setRefereeSport(value)}
+                  options={refereeSports}
+                />
+                <SelectField
+                  name="referee_level"
+                  label="Niveau d’arbitrage"
+                  defaultValue={profile?.referee_level ?? ""}
+                  options={refereeLevels}
+                />
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Ville de départ</label>
-                  <input name="referee_city" defaultValue={profile?.referee_city ?? profile?.city ?? ""} placeholder="Combs-la-Ville" className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
+                  <input name="referee_city" defaultValue={profile?.referee_city ?? profile?.city ?? ""} placeholder="Combs-la-Ville" className={inputClass} />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Rayon de déplacement km</label>
-                  <input name="referee_radius_km" type="number" min="0" defaultValue={profile?.referee_radius_km ?? ""} placeholder="25" className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
+                  <input name="referee_radius_km" type="number" min="0" defaultValue={profile?.referee_radius_km ?? ""} placeholder="25" className={inputClass} />
                 </div>
               </div>
               <div className="mt-6 grid gap-6 sm:grid-cols-2">
@@ -286,10 +289,12 @@ Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuv
               <p className="text-[11px] uppercase tracking-[0.24em] text-[#8bb7ff]">Coach / staff</p>
               <h3 className="font-display mt-3 text-[2rem] uppercase leading-[0.95] text-white">Missions possibles</h3>
               <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm text-white/55">Rôle staff</label>
-                  <input name="staff_roles" list="staff-roles" defaultValue={profile?.staff_roles ?? ""} placeholder="Coach, assistant, préparateur..." className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
-                </div>
+                <SelectField
+                  name="staff_roles"
+                  label="Rôle staff"
+                  defaultValue={profile?.staff_roles ?? ""}
+                  options={withCurrentOption(STAFF_ROLE_OPTIONS, profile?.staff_roles)}
+                />
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Expérience</label>
                   <textarea name="staff_experience" rows={4} defaultValue={profile?.staff_experience ?? ""} placeholder="Ton expérience, tes disponibilités, les catégories que tu peux encadrer..." className="w-full rounded-[22px] border border-white/8 bg-white/2 px-4 py-4 text-white outline-none" />
@@ -305,7 +310,7 @@ Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuv
                 name="contact_email"
                 type="email"
                 defaultValue={profile?.contact_email ?? ""}
-                className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+                className={inputClass}
               />
             </div>
 
@@ -315,7 +320,7 @@ Tu peux créer un profil joueur, arbitre ou coach / staff. Plusieurs rôles peuv
                 name="phone"
                 type="tel"
                 defaultValue={profile?.phone ?? ""}
-                className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+                className={inputClass}
               />
             </div>
           </div>

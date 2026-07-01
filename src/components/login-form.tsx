@@ -87,7 +87,7 @@ export default function LoginForm({ defaultMessage, defaultError }: LoginFormPro
         <button
           type="submit"
           disabled={loading}
-          className="btn-primary w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl bg-[#4f8cff] px-4 py-3 font-medium text-[#07080f] transition hover:bg-[#00d4ff] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? "Connexion..." : "Se connecter"}
         </button>

@@ -5,9 +5,8 @@ import EmptyState from "@/components/empty-state";
 import PlayerAvatar from "@/components/player-avatar";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
-import FavoriteButton from "@/components/favorite-button";
-import ReportButton from "@/components/report-button";
 import { calculateOfferCompatibility, calculatePlayerClubCompatibility, getOfferType, getOfferTypeLabel } from "@/lib/matching";
+import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -16,16 +15,6 @@ type SearchParams = {
   sort?: "match" | "recent" | "alpha";
   role?: "all" | "player" | "referee" | "staff";
 };
-
-const profileRoleLabels: Record<string, string> = {
-  player: "Joueur",
-  referee: "Arbitre",
-  staff: "Coach / staff",
-};
-
-function getProfileRoleLabel(role: string) {
-  return profileRoleLabels[role] || role;
-}
 
 export default async function ClubJoueursPage({
   searchParams,
@@ -54,31 +43,24 @@ export default async function ClubJoueursPage({
 
   if (!club) redirect("/app/club/profil/edit");
 
-  const [{ data: activeOffers }, { data: savedProfiles }] = await Promise.all([
-    supabase
-      .from("club_offers")
-      .select("*")
-      .eq("club_id", club.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("saved_items")
-      .select("target_id")
-      .eq("user_id", user.id)
-      .eq("target_type", "player_profile"),
-  ]);
-
-  const savedProfileIds = new Set((savedProfiles || []).map((item: any) => item.target_id));
+  const { data: activeOffers } = await supabase
+    .from("club_offers")
+    .select("*")
+    .eq("club_id", club.id)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
   const offers = activeOffers || [];
 
+  // Recherche large : on garde uniquement les profils publics.
+  // Le score de compatibilité sert ensuite à classer sport, zone, niveau et poste.
   let playersQuery = supabase
     .from("player_profiles")
     .select("*")
     .or("is_public.eq.true,is_public.is.null");
   if (q) {
     const safeQ = q.replace(/[%_]/g, "");
-    playersQuery = playersQuery.or(`display_name.ilike.%${safeQ}%,bio.ilike.%${safeQ}%,city.ilike.%${safeQ}%,position.ilike.%${safeQ}%,sport.ilike.%${safeQ}%`);
+    playersQuery = playersQuery.or(`display_name.ilike.%${safeQ}%,bio.ilike.%${safeQ}%,city.ilike.%${safeQ}%,position.ilike.%${safeQ}%`);
   }
   if (city) playersQuery = playersQuery.ilike("city", `%${city.replace(/[%_]/g, "")}%`);
   if (level) playersQuery = playersQuery.ilike("level", `%${level.replace(/[%_]/g, "")}%`);
@@ -112,96 +94,94 @@ export default async function ClubJoueursPage({
   const hasFilters = Boolean(q || city || level || sort !== "match" || role !== "all");
 
   return (
-    <main className="space-y-7">
-      <section className="premium-card rounded-[28px] p-5 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-muted)]">Recherche</p>
-            <h1 className="font-display mt-2 text-[2.2rem] leading-tight text-[color:var(--text-main)]">Profils sportifs</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-7 text-[color:var(--text-muted)]">
-              Recherche des joueurs, arbitres ou coachs/staff. Les profils les plus compatibles avec tes annonces remontent en premier.
-            </p>
-          </div>
-          <span className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-4 py-2 text-sm font-medium text-[color:var(--text-soft)]">
-            {sortedPlayers.length} profil{sortedPlayers.length > 1 ? "s" : ""}
-          </span>
-        </div>
-
-        <form className="ui-filter-grid gap-4">
-          <input type="text" name="q" defaultValue={q} placeholder="Nom, sport, poste, ville..." className="ui-input w-full border px-5 py-3 text-sm leading-6" />
-          <select name="role" defaultValue={role} className="ui-select w-full border px-5 py-3 text-sm leading-6">
-            <option value="all">Tous les profils</option>
-            <option value="player">Joueurs</option>
-            <option value="referee">Arbitres</option>
-            <option value="staff">Coach / staff</option>
-          </select>
-          <input type="text" name="city" defaultValue={city} placeholder="Ville" className="ui-input w-full border px-5 py-3 text-sm leading-6" />
-          <input type="text" name="level" defaultValue={level} placeholder="Niveau" className="ui-input w-full border px-5 py-3 text-sm leading-6" />
-          <div className="flex flex-wrap gap-3">
-            <select name="sort" defaultValue={sort} className="ui-select min-w-[190px] flex-1 border px-5 py-3 text-sm leading-6">
-              <option value="match">Meilleurs matchs</option>
-              <option value="recent">Plus récents</option>
-              <option value="alpha">A-Z</option>
-            </select>
-            <button type="submit" className="btn-primary rounded-2xl px-5 py-3 text-sm font-semibold">Filtrer</button>
-          </div>
-        </form>
-        {hasFilters && <Link href="/app/club/joueurs" className="mt-4 inline-flex text-sm font-medium text-[color:var(--primary)]">Réinitialiser</Link>}
+    <main className="space-y-12">
+      <section className="max-w-5xl">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">Joueurs</p>
+        <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem] lg:text-[5.6rem]">
+          Profils classés
+          <br />
+          par compatibilité
+        </h1>
+        <p className="mt-7 max-w-2xl text-base leading-8 text-white/68 sm:text-lg">
+          Une sélection lisible des joueurs avec score de compatibilité et signaux utiles.
+        </p>
       </section>
 
-      <section>
+      <section className="rounded-[28px] border border-white/8 bg-white/2 p-5">
+        <form className="grid gap-4 lg:grid-cols-5">
+          <input type="text" name="q" defaultValue={q} placeholder="Rechercher un profil..." className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
+          <select name="role" defaultValue={role} className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
+            <option value="all" className="bg-[#07080f] text-white">Tous les profils</option>
+            <option value="player" className="bg-[#07080f] text-white">Joueurs</option>
+            <option value="referee" className="bg-[#07080f] text-white">Arbitres</option>
+            <option value="staff" className="bg-[#07080f] text-white">Coach / staff</option>
+          </select>
+          <select name="city" defaultValue={city} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
+            <option value="" className="bg-[#07080f] text-white/50">Toutes les zones</option>
+            {REGION_OPTIONS.map((region) => (
+              <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+            ))}
+          </select>
+          <select name="level" defaultValue={level} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
+            <option value="" className="bg-[#07080f] text-white/50">Tous les niveaux</option>
+            {LEVEL_OPTIONS.map((item) => (
+              <option key={item} value={item} className="bg-[#07080f] text-white">{item}</option>
+            ))}
+          </select>
+          <div className="flex gap-3">
+            <select name="sort" defaultValue={sort} className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
+              <option value="match" className="bg-[#07080f] text-white">Meilleurs matchs</option>
+              <option value="recent" className="bg-[#07080f] text-white">Plus récents</option>
+              <option value="alpha" className="bg-[#07080f] text-white">A-Z</option>
+            </select>
+            <button type="submit" className="rounded-full bg-[#4f8cff] px-5 py-3 text-sm font-medium text-[#07080f] transition hover:bg-[#00d4ff]">Filtrer</button>
+          </div>
+        </form>
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-white/55">
+          <span>{sortedPlayers.length} profil{sortedPlayers.length > 1 ? "s" : ""} trouvé{sortedPlayers.length > 1 ? "s" : ""}</span>
+          {hasFilters && <Link href="/app/club/joueurs" className="text-[#4f8cff]">Réinitialiser</Link>}
+        </div>
+      </section>
+
+      <section className="border-t border-white/5 pt-8">
         {sortedPlayers.length === 0 ? (
-          <EmptyState eyebrow="Aucun profil" title="Aucun résultat" description="Aucun profil public trouvé pour le moment." resetHref="/app/club/joueurs" />
+          <EmptyState eyebrow="Aucun joueur" title="Aucun résultat" description="Aucun joueur public trouvé pour le moment. Vérifie qu'un profil joueur est bien public." resetHref="/app/club/joueurs" />
         ) : (
-          <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
-            {sortedPlayers.map(({ player, match, offer }, index) => {
-              const roles = Array.isArray(player.roles_available)
-                ? player.roles_available
-                : String(player.roles_available || "player").split(",").map((item) => item.trim()).filter(Boolean);
-
-              return (
-                <article key={player.id} className="premium-card animate-fade-up rounded-[24px] p-5" style={{ animationDelay: `${index * 45}ms` }}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex min-w-0 items-start gap-4">
-                      <PlayerAvatar avatarPath={player.avatar_path} displayName={player.display_name} size="md" />
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap gap-2">
-                          {roles.slice(0, 3).map((item: string) => (
-                            <span key={`${player.id}-${item}`} className="ui-pill rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.11em]">
-                              {getProfileRoleLabel(item)}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {sortedPlayers.map(({ player, match, offer }, index) => (
+              <article key={player.id} className="premium-card animate-fade-up rounded-[32px] p-6" style={{ animationDelay: `${index * 60}ms` }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <PlayerAvatar avatarPath={player.avatar_path} displayName={player.display_name} size="md" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap gap-2">
+                        {(() => {
+                          const roles = Array.isArray(player.roles_available) ? player.roles_available : String(player.roles_available || "player").split(",").map((item) => item.trim());
+                          return roles.slice(0, 3).map((item: string) => (
+                            <span key={`${player.id}-${item}`} className="rounded-full border border-[#35e6a5]/20 bg-[#35e6a5]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#8ff5cf]">
+                              {getOfferTypeLabel(item)}
                             </span>
-                          ))}
-                        </div>
-                        <h2 className="font-display mt-4 break-words text-[1.65rem] leading-tight text-[color:var(--text-main)]">{player.display_name}</h2>
-                        <p className="mt-2 text-sm leading-7 text-[color:var(--text-muted)]">
-                          {[player.sport, player.position, player.level, player.city || player.region].filter(Boolean).join(" • ") || "Profil sportif"}
-                        </p>
+                          ));
+                        })()}
                       </div>
+                      <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-white/35">{player.sport}{player.position ? ` • ${player.position}` : ""}{player.level ? ` • ${player.level}` : ""}</p>
+                      <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">{player.display_name}</h2>
+                      <p className="mt-3 text-sm leading-7 text-white/68">{player.city || "Ville non renseignée"}{player.region ? ` • ${player.region}` : ""}</p>
+                      {offer && <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8bb7ff]">Basé sur : {offer.title} · {getOfferTypeLabel(getOfferType(offer.offer_type, offer.category))}</p>}
                     </div>
-                    <CompatibilityBadge match={match} compact />
                   </div>
+                  <CompatibilityBadge match={match} compact />
+                </div>
 
-                  {offer && (
-                    <div className="mt-5 rounded-[18px] border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm leading-6 text-[color:var(--text-muted)]">
-                      <span className="font-semibold text-[color:var(--text-main)]">Basé sur :</span>{" "}
-                      {offer.title} · {getOfferTypeLabel(getOfferType(offer.offer_type, offer.category))}
-                    </div>
-                  )}
+                <p className="mt-5 text-sm leading-8 text-white/64">{player.bio || "Aucune bio pour le moment."}</p>
 
-                  <p className="mt-5 line-clamp-3 text-sm leading-8 text-[color:var(--text-soft)]">{player.bio || "Aucune bio pour le moment."}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {match.reasons.slice(0, 4).map((reason) => <InsightPill key={`${player.id}-${reason.label}`} reason={reason} />)}
+                </div>
 
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {match.reasons.slice(0, 4).map((reason) => <InsightPill key={`${player.id}-${reason.label}`} reason={reason} />)}
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <Link href={`/app/club/joueurs/${player.id}`} className="btn-secondary rounded-full px-4 py-2.5 text-sm font-medium">Voir le CV sportif</Link>
-                    <FavoriteButton targetType="player_profile" targetId={player.id} initialSaved={savedProfileIds.has(player.id)} compact />
-                    <ReportButton targetType="player_profile" targetId={player.id} compact />
-                  </div>
-                </article>
-              );
-            })}
+                <Link href={`/app/club/joueurs/${player.id}`} className="mt-6 inline-flex text-sm font-medium text-[#4f8cff]">Voir le CV sportif</Link>
+              </article>
+            ))}
           </div>
         )}
       </section>
