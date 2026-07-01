@@ -401,7 +401,7 @@ export default function AppSidebar({
       >
         <div
           className={[
-            "absolute left-0 top-0 h-full w-[86vw] max-w-[380px] border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
+            "absolute left-0 top-0 h-dvh w-[86vw] max-w-[380px] overflow-y-auto overscroll-contain border-r border-white/10 bg-[#0d1020]/96 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
             open ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
@@ -430,7 +430,7 @@ export default function AppSidebar({
       </div>
 
       <aside className="hidden w-full lg:block">
-        <div className="sticky top-[102px]">
+        <div className="sticky top-[102px] max-h-[calc(100dvh-118px)] overflow-y-auto overscroll-contain pr-1">
           <div className="premium-card rounded-[30px] p-5">
             <div className="border-b border-white/8 pb-5">
               <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">
