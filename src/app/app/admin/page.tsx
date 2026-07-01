@@ -6,6 +6,8 @@ import { formatPostDate, getPostContentLabel } from "@/lib/posts";
 import AdminActionButton from "@/components/admin/admin-action-button";
 import {
   adminDeactivateOffer,
+  adminDeleteClub,
+  adminDeletePlayerProfile,
   adminDeletePost,
   adminHidePost,
   adminReactivateOffer,
@@ -134,7 +136,7 @@ function getPostHref(post: any) {
 }
 
 function getOfferHref(offer: any) {
-  return `/app/joueur/opportunites#offer-${offer.id}`;
+  return `/app/annonces/${offer.id}`;
 }
 
 function getRequestHref(request: any) {
@@ -216,12 +218,12 @@ export default async function AdminPage() {
     getData(supabase, "player_profiles", (q) =>
       q.select("id, user_id, display_name, sport, position, level, city, region, created_at, is_public, open_to_opportunities")
         .order("created_at", { ascending: false })
-        .limit(7),
+        .limit(15),
     ),
     getData(supabase, "clubs", (q) =>
       q.select("id, user_id, club_name, sport, level, city, region, created_at")
         .order("created_at", { ascending: false })
-        .limit(7),
+        .limit(15),
     ),
     getData(supabase, "club_offers", (q) =>
       q.select("id, club_id, title, offer_type, category, sport, position_needed, level_required, location, status, created_at")
@@ -438,49 +440,84 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-3">
+      <section className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="premium-card rounded-[24px] p-4">
-          <SectionHeader title="Derniers joueurs" />
-          <div className="divide-y divide-[color:var(--line)]">
-            {players.length === 0 ? (
-              <EmptyCompact>Aucun joueur.</EmptyCompact>
-            ) : (
-              players.map((player: any) => (
-                <Link key={player.id} href={`/joueurs/${player.id}`} className="group block py-3">
-                  <p className="truncate font-medium text-[color:var(--text-main)] group-hover:text-[color:var(--primary)]">
-                    {safeText(player.display_name, "Joueur sans nom")}
-                  </p>
-                  <p className="mt-1 truncate text-sm text-[color:var(--text-muted)]">
-                    {safeText(player.sport)} • {safeText(player.position, "Poste non précisé")} • {safeText(player.level, "Niveau non précisé")}
-                  </p>
-                </Link>
-              ))
-            )}
+          <SectionHeader title="Joueurs & clubs" description="Liste compacte des comptes visibles sur la plateforme, avec suppression admin." />
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[color:var(--text-main)]">Joueurs / profils sportifs</p>
+                <Pill>{players.length}</Pill>
+              </div>
+              <div className="divide-y divide-[color:var(--line)] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3">
+                {players.length === 0 ? (
+                  <div className="py-3 text-sm text-[color:var(--text-muted)]">Aucun joueur.</div>
+                ) : (
+                  players.map((player: any) => (
+                    <div key={player.id} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                      <Link href={`/joueurs/${player.id}`} className="group min-w-0">
+                        <p className="truncate font-medium text-[color:var(--text-main)] group-hover:text-[color:var(--primary)]">
+                          {safeText(player.display_name, "Profil sans nom")}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-[color:var(--text-muted)]">
+                          {safeText(player.sport)} • {safeText(player.position, "Profil sportif")} • {safeText(player.level, "Niveau non précisé")}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-[color:var(--text-dim)]">
+                          {safeText(player.city, "Ville non précisée")} • {compactDate(player.created_at)}
+                        </p>
+                      </Link>
+                      <AdminActionButton
+                        label="Supprimer"
+                        title="Supprimer ce profil ?"
+                        description="Le profil, ses médias, ses publications, ses demandes et son accès seront retirés du site. Action à utiliser en cas de faux compte ou signalement sérieux."
+                        confirmLabel="Supprimer"
+                        variant="danger"
+                        action={adminDeletePlayerProfile.bind(null, player.id)}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[color:var(--text-main)]">Clubs</p>
+                <Pill>{clubs.length}</Pill>
+              </div>
+              <div className="divide-y divide-[color:var(--line)] rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-soft)] px-3">
+                {clubs.length === 0 ? (
+                  <div className="py-3 text-sm text-[color:var(--text-muted)]">Aucun club.</div>
+                ) : (
+                  clubs.map((club: any) => (
+                    <div key={club.id} className="grid gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                      <Link href={`/clubs/${club.id}`} className="group min-w-0">
+                        <p className="truncate font-medium text-[color:var(--text-main)] group-hover:text-[color:var(--primary)]">
+                          {safeText(club.club_name, "Club sans nom")}
+                        </p>
+                        <p className="mt-1 truncate text-sm text-[color:var(--text-muted)]">
+                          {safeText(club.sport)} • {safeText(club.level, "Niveau non précisé")} • {safeText(club.city, "Ville non précisée")}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-[color:var(--text-dim)]">Créé {compactDate(club.created_at)}</p>
+                      </Link>
+                      <AdminActionButton
+                        label="Supprimer"
+                        title="Supprimer ce club ?"
+                        description="Le club, ses annonces, ses publications et ses demandes seront retirés du site. Action à utiliser en cas de faux compte ou signalement sérieux."
+                        confirmLabel="Supprimer"
+                        variant="danger"
+                        action={adminDeleteClub.bind(null, club.id)}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="premium-card rounded-[24px] p-4">
-          <SectionHeader title="Derniers clubs" />
-          <div className="divide-y divide-[color:var(--line)]">
-            {clubs.length === 0 ? (
-              <EmptyCompact>Aucun club.</EmptyCompact>
-            ) : (
-              clubs.map((club: any) => (
-                <Link key={club.id} href={`/clubs/${club.id}`} className="group block py-3">
-                  <p className="truncate font-medium text-[color:var(--text-main)] group-hover:text-[color:var(--primary)]">
-                    {safeText(club.club_name, "Club sans nom")}
-                  </p>
-                  <p className="mt-1 truncate text-sm text-[color:var(--text-muted)]">
-                    {safeText(club.sport)} • {safeText(club.level, "Niveau non précisé")} • {safeText(club.city, "Ville non précisée")}
-                  </p>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="premium-card rounded-[24px] p-4">
-          <SectionHeader title="Dernières demandes" />
+          <SectionHeader title="Dernières demandes" description="Suivi compact des mises en relation." />
           <div className="divide-y divide-[color:var(--line)]">
             {requests.length === 0 ? (
               <EmptyCompact>Aucune demande.</EmptyCompact>

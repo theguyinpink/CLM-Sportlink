@@ -191,7 +191,7 @@ export default async function JoueurOpportunitesPage({
             />
           ) : (
             offers.map((item: any, index: number) => (
-              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/joueur/clubs/${item.club.id}`} index={index} isSaved={savedOfferIds.has(item.offer.id)} />
+              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/annonces/${item.offer.id}`} index={index} isSaved={savedOfferIds.has(item.offer.id)} />
             ))
           )}
         </div>
