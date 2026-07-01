@@ -926,3 +926,27 @@ html[data-theme="dark"] select {
   background: rgba(255, 255, 255, 0.045) !important;
   color: #f8fafc !important;
 }
+
+/* Correction navbar publique : boutons lisibles en clair et sombre. */
+.nav-pill-active,
+.nav-search-submit {
+  border: 1px solid #1d4ed8 !important;
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 26px rgba(29, 78, 216, 0.22) !important;
+}
+
+.nav-pill-active:hover,
+.nav-search-submit:hover {
+  background: #1e40af !important;
+  border-color: #1e40af !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .nav-pill-active,
+html[data-theme="light"] .nav-search-submit,
+html[data-theme="dark"] .nav-pill-active,
+html[data-theme="dark"] .nav-search-submit {
+  color: #ffffff !important;
+}
+

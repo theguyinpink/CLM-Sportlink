@@ -215,7 +215,7 @@ export default function SiteNavbarClient({
                       className={[
                         "rounded-full px-3.5 py-2 text-sm transition",
                         isActive(link.href)
-                          ? "bg-[color:var(--text-main)] text-[color:var(--bg)] font-medium"
+                          ? "nav-pill-active font-medium"
                           : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--text-main)]",
                       ].join(" ")}
                     >
@@ -226,7 +226,7 @@ export default function SiteNavbarClient({
               ) : (
                 <button
                   type="submit"
-                  className="rounded-full border border-[color:var(--text-main)] bg-[color:var(--text-main)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--bg)] transition hover:opacity-90"
+                  className="nav-search-submit rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition hover:opacity-90"
                 >
                   Rechercher
                 </button>
@@ -325,8 +325,8 @@ export default function SiteNavbarClient({
                 className={[
                   "block rounded-full px-4 py-3 text-sm transition animate-fade-up",
                   isActive(link.href)
-                    ? "bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] font-semibold text-[#050612]"
-                    : "text-white/78 hover:bg-white/[0.05] hover:text-white",
+                    ? "nav-pill-active font-semibold"
+                    : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--text-main)]",
                 ].join(" ")}
                 style={{ animationDelay: `${index * 60}ms` }}
               >
@@ -346,7 +346,7 @@ export default function SiteNavbarClient({
                 <Link
                   href="/inscription/role"
                   onClick={closeMenu}
-                  className="block rounded-full bg-gradient-to-r from-[#4f8cff] to-[#00d4ff] px-4 py-3 text-sm font-bold text-[#050612]"
+                  className="nav-search-submit block rounded-full px-4 py-3 text-sm font-bold"
                 >
                   Créer un profil
                 </Link>
