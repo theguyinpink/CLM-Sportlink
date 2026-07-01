@@ -12,6 +12,7 @@ type AuthResult = {
 export async function signUpPlayerFromClient(input: {
   email: string;
   password: string;
+  profileRole?: "player" | "referee" | "staff" | string;
 }): Promise<AuthResult> {
   const supabase = await createClient();
 
@@ -22,10 +23,15 @@ export async function signUpPlayerFromClient(input: {
     return { ok: false, error: "Email ou mot de passe manquant." };
   }
 
+  const rawProfileRole = String(input.profileRole || "player").trim();
+  const profileRole = ["player", "referee", "staff"].includes(rawProfileRole)
+    ? rawProfileRole
+    : "player";
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { role: "player" } },
+    options: { data: { role: "player", profile_role: profileRole } },
   });
 
   if (error) return { ok: false, error: error.message };
@@ -59,6 +65,7 @@ export async function signUpPlayer(formData: FormData) {
   const result = await signUpPlayerFromClient({
     email: String(formData.get("email") || ""),
     password: String(formData.get("password") || ""),
+    profileRole: String(formData.get("profileRole") || "player"),
   });
 
   if (!result.ok) {

@@ -3,59 +3,74 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-type ActionResult = {
-  ok: boolean;
-  error?: string;
+type FeedbackInput = {
+  category?: string;
+  type?: string;
+  feedback_type?: string;
+  rating?: number | string | null;
+  page_url?: string;
+  pageUrl?: string;
+  page_path?: string;
+  pagePath?: string;
+  path?: string;
+  message?: string;
+  content?: string;
 };
-
-const VALID_TYPES = new Set(["bug", "idea", "design", "question", "other"]);
 
 function clean(value?: string | null) {
   return String(value || "").trim();
 }
 
-export async function createBetaFeedbackFromClient(input: {
-  feedback_type: string;
-  message: string;
-  page_url?: string | null;
-  rating?: number | null;
-}): Promise<ActionResult> {
+export async function submitBetaFeedback(input: FeedbackInput) {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { ok: false, error: "Tu dois être connecté." };
+  if (!user)
+    return {
+      ok: false,
+      error: "Tu dois être connecté pour envoyer un retour.",
+    };
 
-  const feedbackType = clean(input.feedback_type) || "other";
-  const message = clean(input.message);
-  const pageUrl = clean(input.page_url) || null;
-  const role = user.user_metadata?.role === "club" ? "club" : "player";
-  const rating = typeof input.rating === "number" && Number.isFinite(input.rating)
-    ? Math.max(1, Math.min(5, Math.round(input.rating)))
-    : null;
+  const message = clean(input.message ?? input.content);
+  if (message.length < 8)
+    return { ok: false, error: "Le retour est trop court." };
 
-  if (!VALID_TYPES.has(feedbackType)) {
-    return { ok: false, error: "Type de retour invalide." };
-  }
-
-  if (message.length < 3) {
-    return { ok: false, error: "Ton message est trop court." };
-  }
+  const role = user.user_metadata?.role || "unknown";
+  const rawRating =
+    typeof input.rating === "string" ? Number(input.rating) : input.rating;
+  const rating =
+    typeof rawRating === "number" && rawRating >= 1 && rawRating <= 5
+      ? rawRating
+      : null;
+  const feedbackType =
+    clean(input.feedback_type ?? input.category ?? input.type) || "general";
+  const pageUrl = clean(
+    input.page_url ??
+      input.pageUrl ??
+      input.page_path ??
+      input.pagePath ??
+      input.path,
+  );
 
   const { error } = await supabase.from("beta_feedback").insert({
     user_id: user.id,
     user_role: role,
     feedback_type: feedbackType,
-    message,
-    page_url: pageUrl,
     rating,
+    page_url: pageUrl,
+    message,
     status: "new",
   });
 
   if (error) return { ok: false, error: error.message };
 
+  revalidatePath("/app/feedback");
   revalidatePath("/app/admin");
   return { ok: true };
+}
+
+export async function createBetaFeedbackFromClient(input: FeedbackInput) {
+  return submitBetaFeedback(input);
 }

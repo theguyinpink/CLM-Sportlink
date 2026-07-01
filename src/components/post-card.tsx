@@ -14,6 +14,7 @@ import {
   type PostAuthorType,
 } from "@/lib/posts";
 import { deletePostFromClient, updatePostFromClient } from "@/app/post-actions";
+import { SPORT_OPTIONS, REGION_OPTIONS, withCurrentOption } from "@/lib/form-options";
 
 export type PostCardData = {
   id: string;
@@ -380,9 +381,19 @@ export default function PostCard({ post, currentUserId, viewerRole, index = 0 }:
             />
 
             <div className="grid gap-4 sm:grid-cols-4">
-              <input name="sport" defaultValue={post.sport || ""} placeholder="Sport" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
+              <select name="sport" defaultValue={post.sport || ""} className="rounded-full border border-white/10 bg-[#07080f] px-4 py-3 text-white outline-none">
+                <option value="" className="bg-[#07080f] text-white/50">Sport</option>
+                {withCurrentOption(SPORT_OPTIONS, post.sport).map((sport) => (
+                  <option key={sport} value={sport} className="bg-[#07080f] text-white">{sport}</option>
+                ))}
+              </select>
               <input name="city" defaultValue={post.city || ""} placeholder="Ville" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
-              <input name="region" defaultValue={post.region || ""} placeholder="Région" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
+              <select name="region" defaultValue={post.region || ""} className="rounded-full border border-white/10 bg-[#07080f] px-4 py-3 text-white outline-none">
+                <option value="" className="bg-[#07080f] text-white/50">Région</option>
+                {withCurrentOption(REGION_OPTIONS, post.region).map((region) => (
+                  <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
+                ))}
+              </select>
               <input name="radius_km" type="number" defaultValue={post.radius_km || 50} placeholder="Rayon" className="border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30" />
             </div>
 

@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/empty-state";
 import ClubLogo from "@/components/club-logo";
+import CustomSelect from "@/components/custom-select";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
 import { calculatePlayerClubCompatibility } from "@/lib/matching";
+import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -101,36 +103,29 @@ export default async function JoueurClubsPage({
             placeholder="Rechercher un club..."
             className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
           />
-          <input
-            type="text"
+          <CustomSelect
             name="city"
             defaultValue={city}
-            placeholder="Ville"
-            className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+            placeholder="Toutes les zones"
+            options={[{ value: "", label: "Toutes les zones" }, ...REGION_OPTIONS]}
           />
-          <input
-            type="text"
+          <CustomSelect
             name="level"
             defaultValue={level}
-            placeholder="Niveau"
-            className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+            placeholder="Tous les niveaux"
+            options={[{ value: "", label: "Tous les niveaux" }, ...LEVEL_OPTIONS]}
           />
           <div className="flex gap-3">
-            <select
+            <CustomSelect
               name="sort"
               defaultValue={sort}
-              className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none"
-            >
-              <option value="match" className="bg-[#07080f] text-white">
-                Meilleurs matchs
-              </option>
-              <option value="recent" className="bg-[#07080f] text-white">
-                Plus récents
-              </option>
-              <option value="alpha" className="bg-[#07080f] text-white">
-                Ordre alphabétique
-              </option>
-            </select>
+              className="min-w-0 flex-1"
+              options={[
+                { value: "match", label: "Meilleurs matchs" },
+                { value: "recent", label: "Plus récents" },
+                { value: "alpha", label: "Ordre alphabétique" },
+              ]}
+            />
             <button
               type="submit"
               className="rounded-full bg-[#4f8cff] px-5 py-3 text-sm font-medium text-[#07080f] transition hover:bg-[#00d4ff]"

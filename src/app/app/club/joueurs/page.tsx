@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import EmptyState from "@/components/empty-state";
 import PlayerAvatar from "@/components/player-avatar";
+import CustomSelect from "@/components/custom-select";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
 import { calculateOfferCompatibility, calculatePlayerClubCompatibility, getOfferType, getOfferTypeLabel } from "@/lib/matching";
+import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -109,20 +111,39 @@ export default async function ClubJoueursPage({
       <section className="rounded-[28px] border border-white/8 bg-white/2 p-5">
         <form className="grid gap-4 lg:grid-cols-5">
           <input type="text" name="q" defaultValue={q} placeholder="Rechercher un profil..." className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
-          <select name="role" defaultValue={role} className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
-            <option value="all" className="bg-[#07080f] text-white">Tous les profils</option>
-            <option value="player" className="bg-[#07080f] text-white">Joueurs</option>
-            <option value="referee" className="bg-[#07080f] text-white">Arbitres</option>
-            <option value="staff" className="bg-[#07080f] text-white">Coach / staff</option>
-          </select>
-          <input type="text" name="city" defaultValue={city} placeholder="Ville" className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
-          <input type="text" name="level" defaultValue={level} placeholder="Niveau" className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
+          <CustomSelect
+            name="role"
+            defaultValue={role}
+            options={[
+              { value: "all", label: "Tous les profils" },
+              { value: "player", label: "Joueurs" },
+              { value: "referee", label: "Arbitres" },
+              { value: "staff", label: "Coach / staff" },
+            ]}
+          />
+          <CustomSelect
+            name="city"
+            defaultValue={city}
+            placeholder="Toutes les zones"
+            options={[{ value: "", label: "Toutes les zones" }, ...REGION_OPTIONS]}
+          />
+          <CustomSelect
+            name="level"
+            defaultValue={level}
+            placeholder="Tous les niveaux"
+            options={[{ value: "", label: "Tous les niveaux" }, ...LEVEL_OPTIONS]}
+          />
           <div className="flex gap-3">
-            <select name="sort" defaultValue={sort} className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
-              <option value="match" className="bg-[#07080f] text-white">Meilleurs matchs</option>
-              <option value="recent" className="bg-[#07080f] text-white">Plus récents</option>
-              <option value="alpha" className="bg-[#07080f] text-white">A-Z</option>
-            </select>
+            <CustomSelect
+              name="sort"
+              defaultValue={sort}
+              className="min-w-0 flex-1"
+              options={[
+                { value: "match", label: "Meilleurs matchs" },
+                { value: "recent", label: "Plus récents" },
+                { value: "alpha", label: "A-Z" },
+              ]}
+            />
             <button type="submit" className="rounded-full bg-[#4f8cff] px-5 py-3 text-sm font-medium text-[#07080f] transition hover:bg-[#00d4ff]">Filtrer</button>
           </div>
         </form>

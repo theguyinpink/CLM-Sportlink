@@ -132,3 +132,23 @@ export async function adminReactivateOffer(offerId: string): Promise<AdminAction
     return { ok: false, error: error instanceof Error ? error.message : "Erreur admin." };
   }
 }
+
+export async function adminUpdateFeedbackStatus(feedbackId: string, status: "new" | "reviewed" | "done"): Promise<AdminActionResult> {
+  try {
+    const id = clean(feedbackId);
+    if (!id) return { ok: false, error: "Retour introuvable." };
+
+    const supabase = await requireAdminClient();
+    const { error } = await supabase
+      .from("beta_feedback")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/app/admin");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Erreur admin." };
+  }
+}

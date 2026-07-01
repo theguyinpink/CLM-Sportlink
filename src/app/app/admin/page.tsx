@@ -9,6 +9,7 @@ import {
   adminHidePost,
   adminReactivateOffer,
   adminRestorePost,
+  adminUpdateFeedbackStatus,
 } from "@/app/app/admin/actions";
 
 function safeText(value?: string | null, fallback = "Non renseigné") {
@@ -133,6 +134,8 @@ export default async function AdminPage() {
     publicPostCount,
     requestCount,
     acceptedRequestCount,
+    feedbackCount,
+    newFeedbackCount,
   ] = await Promise.all([
     getCount(supabase, "player_profiles"),
     getCount(supabase, "clubs"),
@@ -142,9 +145,11 @@ export default async function AdminPage() {
     getCount(supabase, "posts", (q) => q.eq("visibility", "public")),
     getCount(supabase, "connection_requests"),
     getCount(supabase, "connection_requests", (q) => q.eq("status", "accepted")),
+    getCount(supabase, "beta_feedback"),
+    getCount(supabase, "beta_feedback", (q) => q.eq("status", "new")),
   ]);
 
-  const [players, clubs, offers, rawPosts, requests] = await Promise.all([
+  const [players, clubs, offers, rawPosts, requests, feedbacks] = await Promise.all([
     getData(supabase, "player_profiles", (q) =>
       q.select("id, user_id, display_name, sport, position, level, city, region, created_at, is_public, open_to_opportunities")
         .order("created_at", { ascending: false })
@@ -167,6 +172,11 @@ export default async function AdminPage() {
       q.select("id, status, source_role, created_at, responded_at")
         .order("created_at", { ascending: false })
         .limit(10),
+    ),
+    getData(supabase, "beta_feedback", (q) =>
+      q.select("id, user_id, role, category, rating, page_path, message, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(12),
     ),
   ]);
 
@@ -210,8 +220,62 @@ export default async function AdminPage() {
         <StatCard label="Publications" value={`${publicPostCount}/${postCount}`} helper="Visibles / total" />
         <StatCard label="Demandes" value={requestCount} helper="Demandes de mise en relation" />
         <StatCard label="Acceptées" value={acceptedRequestCount} helper="Contacts débloqués" />
+        <StatCard label="Retours bêta" value={`${newFeedbackCount}/${feedbackCount}`} helper="Nouveaux / total" />
         <StatCard label="Service role" value={serviceRoleReady ? "OK" : "À configurer"} helper="Actions admin sécurisées" />
-        <StatCard label="Version" value="3.7" helper="Admin basic MVP" />
+      </section>
+
+
+      <section className="space-y-8">
+        <SectionTitle
+          eyebrow="Bêta"
+          title="Retours testeurs"
+          description="Tous les retours envoyés depuis l’espace connecté arrivent ici pour suivre les bugs, idées et problèmes mobile."
+        />
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          {feedbacks.length === 0 ? (
+            <div className="premium-card rounded-[30px] p-6 text-white/62">Aucun retour bêta pour le moment.</div>
+          ) : (
+            feedbacks.map((feedback: any) => (
+              <article key={feedback.id} className="premium-card rounded-[30px] p-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#35e6a5]">
+                    {safeText(feedback.category, "retour")}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
+                    {safeText(feedback.status, "new")}
+                  </span>
+                  {feedback.rating ? (
+                    <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8bb7ff]">
+                      note {feedback.rating}/5
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-4 text-sm leading-7 text-white/72">{safeText(feedback.message, "Retour vide")}</p>
+                <p className="mt-4 text-xs leading-6 text-white/42">
+                  {safeText(feedback.role, "Utilisateur")} • {safeText(feedback.page_path, "Page non précisée")} • {compactDate(feedback.created_at)}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <AdminActionButton
+                    label="Vu"
+                    title="Marquer ce retour comme vu ?"
+                    description="Le retour restera dans l’admin, mais ne sera plus compté comme nouveau."
+                    confirmLabel="Marquer vu"
+                    action={adminUpdateFeedbackStatus.bind(null, feedback.id, "reviewed")}
+                  />
+                  <AdminActionButton
+                    label="Traité"
+                    title="Marquer ce retour comme traité ?"
+                    description="À utiliser quand le bug ou la remarque a été traité."
+                    confirmLabel="Marquer traité"
+                    variant="success"
+                    action={adminUpdateFeedbackStatus.bind(null, feedback.id, "done")}
+                  />
+                </div>
+              </article>
+            ))
+          )}
+        </div>
       </section>
 
       <section className="space-y-8">

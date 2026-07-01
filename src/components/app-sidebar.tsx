@@ -255,6 +255,7 @@ export default function AppSidebar({
     { label: "Clubs", href: "/app/joueur/clubs", icon: <ClubIcon /> },
     { label: "Opportunités", href: "/app/joueur/opportunites", icon: <DocumentIcon /> },
     { label: "Paramètres", href: "/app/joueur/parametres", icon: <SettingsIcon /> },
+    { label: "Feedback bêta", href: "/app/feedback", icon: <DocumentIcon /> },
   ];
 
   const clubItems: NavItem[] = [
@@ -266,6 +267,7 @@ export default function AppSidebar({
     { label: "Joueurs", href: "/app/club/joueurs", icon: <ClubIcon /> },
     { label: "Mes annonces", href: "/app/club/annonces", icon: <DocumentIcon /> },
     { label: "Paramètres", href: "/app/club/parametres", icon: <SettingsIcon /> },
+    { label: "Feedback bêta", href: "/app/feedback", icon: <DocumentIcon /> },
   ];
 
   const items = role === "player" ? playerItems : clubItems;
@@ -318,7 +320,7 @@ export default function AppSidebar({
 
   return (
     <>
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -333,13 +335,13 @@ export default function AppSidebar({
 
       <div
         className={[
-          "fixed inset-0 z-[70] bg-[#050612]/82 backdrop-blur-md transition duration-300 lg:hidden",
+          "fixed inset-0 z-[70] bg-[#050612]/82 backdrop-blur-md transition duration-300 xl:hidden",
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       >
         <div
           className={[
-            "absolute left-0 top-0 h-full w-[86vw] max-w-[380px] border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
+            "absolute left-0 top-0 h-dvh w-[86vw] max-w-[380px] overflow-y-auto border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
             open ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
@@ -367,8 +369,8 @@ export default function AppSidebar({
         </div>
       </div>
 
-      <aside className="hidden w-full lg:block">
-        <div className="sticky top-[102px]">
+      <aside className="hidden w-full xl:block">
+        <div className="sticky top-[102px] max-h-[calc(100dvh-124px)] overflow-y-auto pr-1">
           <div className="premium-card rounded-[30px] p-5">
             <div className="border-b border-white/8 pb-5">
               <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">

@@ -2,21 +2,45 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { REGION_OPTIONS, SPORT_OPTIONS, LEVEL_OPTIONS } from "@/lib/form-options";
+import { REGION_OPTIONS, SPORT_OPTIONS, getSportLevels, withCurrentOption } from "@/lib/form-options";
 import { saveClubProfileFromClient } from "@/app/profile-actions";
+import CustomSelect from "@/components/custom-select";
 
 type ClubProfileFormProps = {
   club?: any;
   defaultError?: string;
 };
 
-function OptionList({ id, values }: { id: string; values: string[] }) {
+const inputClass = "w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30";
+
+function SelectField({
+  name,
+  label,
+  value,
+  defaultValue,
+  options,
+  onChange,
+  required,
+}: {
+  name: string;
+  label: string;
+  value?: string;
+  defaultValue?: string;
+  options: string[];
+  onChange?: (value: string) => void;
+  required?: boolean;
+}) {
   return (
-    <datalist id={id}>
-      {values.map((value) => (
-        <option key={value} value={value} />
-      ))}
-    </datalist>
+    <CustomSelect
+      name={name}
+      label={label}
+      value={value}
+      defaultValue={value === undefined ? defaultValue : undefined}
+      onChange={onChange}
+      options={options}
+      required={required}
+      placeholder="Sélectionner"
+    />
   );
 }
 
@@ -24,6 +48,7 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
   const router = useRouter();
   const [error, setError] = useState(defaultError || "");
   const [loading, setLoading] = useState(false);
+  const [sport, setSport] = useState(club?.sport || "");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,6 +78,8 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
     router.refresh();
   }
 
+  const levels = withCurrentOption(getSportLevels(sport), club?.level);
+
   return (
     <>
       {error && (
@@ -60,10 +87,6 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
           {error}
         </div>
       )}
-
-      <OptionList id="sports" values={SPORT_OPTIONS} />
-      <OptionList id="levels" values={LEVEL_OPTIONS} />
-      <OptionList id="regions" values={REGION_OPTIONS} />
 
       <form onSubmit={handleSubmit} className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-7">
@@ -73,21 +96,18 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
               name="club_name"
               defaultValue={club?.club_name ?? ""}
               required
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-white/55">Sport</label>
-            <input
-              name="sport"
-              list="sports"
-              defaultValue={club?.sport ?? ""}
-              required
-              placeholder="Basketball"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-            />
-          </div>
+          <SelectField
+            name="sport"
+            label="Sport"
+            value={sport}
+            onChange={(value) => setSport(value)}
+            options={withCurrentOption(SPORT_OPTIONS, club?.sport)}
+            required
+          />
 
           <div>
             <label className="mb-2 block text-sm text-white/55">Ville</label>
@@ -95,31 +115,23 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
               name="city"
               defaultValue={club?.city ?? ""}
               placeholder="Combs-la-Ville"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+              className={inputClass}
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm text-white/55">Région</label>
-            <input
-              name="region"
-              list="regions"
-              defaultValue={club?.region ?? ""}
-              placeholder="Île-de-France"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-            />
-          </div>
+          <SelectField
+            name="region"
+            label="Région"
+            defaultValue={club?.region ?? ""}
+            options={withCurrentOption(REGION_OPTIONS, club?.region)}
+          />
 
-          <div>
-            <label className="mb-2 block text-sm text-white/55">Niveau</label>
-            <input
-              name="level"
-              list="levels"
-              defaultValue={club?.level ?? ""}
-              placeholder="Régional"
-              className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
-            />
-          </div>
+          <SelectField
+            name="level"
+            label="Niveau"
+            defaultValue={club?.level ?? ""}
+            options={levels}
+          />
         </div>
 
         <div className="space-y-10">
@@ -141,7 +153,7 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
                 name="contact_email"
                 type="email"
                 defaultValue={club?.contact_email ?? ""}
-                className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+                className={inputClass}
               />
             </div>
 
@@ -151,7 +163,7 @@ export default function ClubProfileForm({ club, defaultError }: ClubProfileFormP
                 name="phone"
                 type="tel"
                 defaultValue={club?.phone ?? ""}
-                className="w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30"
+                className={inputClass}
               />
             </div>
           </div>
