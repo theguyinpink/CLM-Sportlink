@@ -4,66 +4,24 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteClubOfferFromClient, updateClubOfferFromClient } from "@/app/offer-actions";
 import { getCategoryLabel, getOfferType, getOfferTypeLabel, OFFER_CATEGORIES } from "@/lib/matching";
-import {
-  OFFER_TYPE_OPTIONS,
-  REFEREE_LEVEL_OPTIONS,
-  REGION_OPTIONS,
-  STAFF_ROLE_OPTIONS,
-  getSportFieldLabel,
-  getSportLevels,
-  getSportPositions,
-  withCurrentOption,
-} from "@/lib/form-options";
+import { LEVEL_OPTIONS, OFFER_TYPE_OPTIONS, POSITION_OPTIONS, REFEREE_LEVEL_OPTIONS, REGION_OPTIONS, STAFF_ROLE_OPTIONS } from "@/lib/form-options";
 
 type ClubOfferManagerCardProps = {
   offer: any;
   club: {
-    sport?: string | null;
-    level?: string | null;
     city?: string | null;
     region?: string | null;
   };
   index?: number;
 };
 
-const selectClass = "w-full rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none transition focus:border-[#4f8cff]/45";
-const inputClass = "w-full border-b border-white/10 bg-transparent py-3 text-white outline-none placeholder:text-white/30";
-
-function SelectField({
-  name,
-  label,
-  defaultValue,
-  value,
-  options,
-  onChange,
-}: {
-  name: string;
-  label: string;
-  defaultValue?: string;
-  value?: string;
-  options: string[];
-  onChange?: (value: string) => void;
-}) {
+function OptionList({ id, values }: { id: string; values: string[] }) {
   return (
-    <div>
-      <label className="mb-2 block text-sm text-white/55">{label}</label>
-      <select
-        name={name}
-        defaultValue={value === undefined ? defaultValue || "" : undefined}
-        value={value}
-        onChange={onChange ? (event) => onChange(event.target.value) : undefined}
-        className={selectClass}
-      >
-        <option value="" className="bg-[#07080f] text-white/50">
-          Sélectionner
-        </option>
-        {options.map((option) => (
-          <option key={`${name}-${option}`} value={option} className="bg-[#07080f] text-white">
-            {option}
-          </option>
-        ))}
-      </select>
-    </div>
+    <datalist id={id}>
+      {values.map((value) => (
+        <option key={value} value={value} />
+      ))}
+    </datalist>
   );
 }
 
@@ -170,15 +128,16 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
   const isStaff = offerType === "staff";
   const displayIsReferee = displayOfferType === "referee";
   const displayIsStaff = displayOfferType === "staff";
-  const roleLabel = isReferee ? "Rôle" : isStaff ? "Mission" : getSportFieldLabel(club.sport);
-  const displayRoleLabel = displayIsReferee ? "Rôle" : displayIsStaff ? "Mission" : getSportFieldLabel(club.sport);
+  const roleLabel = isReferee ? "Rôle" : isStaff ? "Mission" : "Poste";
+  const displayRoleLabel = displayIsReferee ? "Rôle" : displayIsStaff ? "Mission" : "Poste";
   const safeCategory = categoryForOfferType(offerType, category);
-  const roleOptions = withCurrentOption(isStaff ? STAFF_ROLE_OPTIONS : getSportPositions(club.sport), offer.position_needed);
-  const levelOptions = withCurrentOption(isReferee ? REFEREE_LEVEL_OPTIONS : getSportLevels(club.sport), offer.level_required || club.level);
-  const regions = withCurrentOption(REGION_OPTIONS, offer.location || club.region || club.city);
 
   return (
     <article className="premium-card animate-fade-up rounded-[32px] p-6" style={{ animationDelay: `${index * 60}ms` }}>
+      <OptionList id={`positions-${offer.id}`} values={isStaff ? STAFF_ROLE_OPTIONS : POSITION_OPTIONS} />
+      <OptionList id={`levels-${offer.id}`} values={isReferee ? REFEREE_LEVEL_OPTIONS : LEVEL_OPTIONS} />
+      <OptionList id={`regions-${offer.id}`} values={REGION_OPTIONS} />
+
       {confirmDelete && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center px-4 py-8">
           <button
@@ -296,11 +255,11 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm text-white/55">Titre</label>
-              <input name="title" required defaultValue={offer.title || ""} className={inputClass} />
+              <input name="title" required defaultValue={offer.title || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
             </div>
             <div>
               <label className="mb-2 block text-sm text-white/55">Statut</label>
-              <select name="status" defaultValue={offer.status || "active"} className={selectClass}>
+              <select name="status" defaultValue={offer.status || "active"} className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
                 <option value="active" className="bg-[#07080f] text-white">Active</option>
                 <option value="closed" className="bg-[#07080f] text-white">Désactivée</option>
               </select>
@@ -310,7 +269,7 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm text-white/55">Besoin du club</label>
-              <select name="offer_type" value={offerType} onChange={(event) => handleOfferTypeChange(event.target.value)} className={selectClass}>
+              <select name="offer_type" value={offerType} onChange={(event) => handleOfferTypeChange(event.target.value)} className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
                 {OFFER_TYPE_OPTIONS.map((type) => (
                   <option key={type.value} value={type.value} className="bg-[#07080f] text-white">
                     {type.label}
@@ -329,7 +288,7 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
             ) : (
               <div>
                 <label className="mb-2 block text-sm text-white/55">Catégorie</label>
-                <select name="category" value={category} onChange={(event) => setCategory(event.target.value)} className={selectClass}>
+                <select name="category" value={category} onChange={(event) => setCategory(event.target.value)} className="w-full rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
                   {OFFER_CATEGORIES.filter((item) => item.value !== "arbitre" && item.value !== "staff").map((item) => (
                     <option key={item.value} value={item.value} className="bg-[#07080f] text-white">
                       {item.label}
@@ -341,21 +300,30 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <SelectField name="location" label="Zone" defaultValue={offer.location || club.region || ""} options={regions} />
-            <SelectField name="level_required" label="Niveau recherché" defaultValue={offer.level_required || ""} options={levelOptions} />
+            <div>
+              <label className="mb-2 block text-sm text-white/55">Zone</label>
+              <input name="location" list={`regions-${offer.id}`} defaultValue={offer.location || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm text-white/55">Niveau recherché</label>
+              <input name="level_required" list={`levels-${offer.id}`} defaultValue={offer.level_required || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
+            </div>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <SelectField name="position_needed" label={roleLabel} defaultValue={offer.position_needed || ""} options={roleOptions} />
+            <div>
+              <label className="mb-2 block text-sm text-white/55">{roleLabel}</label>
+              <input name="position_needed" list={`positions-${offer.id}`} defaultValue={offer.position_needed || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
+            </div>
             {!isReferee && !isStaff && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Âge min</label>
-                  <input name="age_min" type="number" min="0" defaultValue={offer.age_min ?? ""} className={inputClass} />
+                  <input name="age_min" type="number" min="0" defaultValue={offer.age_min ?? ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
                 </div>
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Âge max</label>
-                  <input name="age_max" type="number" min="0" defaultValue={offer.age_max ?? ""} className={inputClass} />
+                  <input name="age_max" type="number" min="0" defaultValue={offer.age_max ?? ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
                 </div>
               </div>
             )}
@@ -365,15 +333,15 @@ export default function ClubOfferManagerCard({ offer, club, index = 0 }: ClubOff
             <div className="grid gap-5 sm:grid-cols-3">
               <div>
                 <label className="mb-2 block text-sm text-white/55">Date</label>
-                <input name="event_date" type="date" defaultValue={offer.event_date || ""} className={inputClass} />
+                <input name="event_date" type="date" defaultValue={offer.event_date || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
               </div>
               <div>
                 <label className="mb-2 block text-sm text-white/55">Horaire</label>
-                <input name="event_time" defaultValue={offer.event_time || ""} className={inputClass} />
+                <input name="event_time" defaultValue={offer.event_time || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
               </div>
               <div>
                 <label className="mb-2 block text-sm text-white/55">Défraiement</label>
-                <input name="remuneration" defaultValue={offer.remuneration || ""} className={inputClass} />
+                <input name="remuneration" defaultValue={offer.remuneration || ""} className="w-full border-b border-white/10 bg-transparent py-3 text-white outline-none" />
               </div>
             </div>
           )}

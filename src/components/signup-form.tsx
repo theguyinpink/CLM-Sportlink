@@ -7,11 +7,10 @@ import { signUpClubFromClient, signUpPlayerFromClient } from "@/app/auth-actions
 
 type SignupFormProps = {
   role: "player" | "club";
-  profileRole?: "player" | "referee" | "staff";
   defaultError?: string;
 };
 
-export default function SignupForm({ role, profileRole = "player", defaultError }: SignupFormProps) {
+export default function SignupForm({ role, defaultError }: SignupFormProps) {
   const router = useRouter();
   const [error, setError] = useState(defaultError || "");
   const [loading, setLoading] = useState(false);
@@ -34,7 +33,7 @@ export default function SignupForm({ role, profileRole = "player", defaultError 
     const result =
       role === "club"
         ? await signUpClubFromClient({ email, password })
-        : await signUpPlayerFromClient({ email, password, profileRole });
+        : await signUpPlayerFromClient({ email, password });
 
     if (!result.ok) {
       setError(result.error || "Impossible de créer le compte.");
@@ -42,7 +41,7 @@ export default function SignupForm({ role, profileRole = "player", defaultError 
       return;
     }
 
-    router.push(`/connexion?message=${encodeURIComponent(role === "club" ? "Compte club créé" : profileRole === "referee" ? "Compte arbitre créé" : profileRole === "staff" ? "Compte staff créé" : "Compte joueur créé")}`);
+    router.push(`/connexion?message=${encodeURIComponent(role === "club" ? "Compte club créé" : "Compte joueur créé")}`);
     router.refresh();
   }
 
@@ -77,11 +76,7 @@ export default function SignupForm({ role, profileRole = "player", defaultError 
             ? "Création..."
             : role === "club"
               ? "Créer mon compte club"
-              : profileRole === "referee"
-                ? "Créer mon compte arbitre"
-                : profileRole === "staff"
-                  ? "Créer mon compte staff"
-                  : "Créer mon compte joueur"}
+              : "Créer mon compte joueur"}
         </button>
       </form>
     </>

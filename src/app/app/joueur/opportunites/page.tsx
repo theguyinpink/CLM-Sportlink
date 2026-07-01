@@ -5,7 +5,6 @@ import EmptyState from "@/components/empty-state";
 import OpportunityCard from "@/components/opportunity-card";
 import OnboardingCard from "@/components/onboarding-card";
 import { calculateOfferCompatibility, calculatePlayerCompletion, getCategoryLabel, getOfferType, getOfferTypeLabel } from "@/lib/matching";
-import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -172,18 +171,8 @@ export default async function JoueurOpportunitesPage({
               <option value="referee" className="bg-[#07080f] text-white">Arbitre</option>
               <option value="staff" className="bg-[#07080f] text-white">Coach / staff</option>
             </select>
-            <select name="city" defaultValue={params.city || ""} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
-              <option value="" className="bg-[#07080f] text-white/50">Toutes les zones</option>
-              {REGION_OPTIONS.map((region) => (
-                <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
-              ))}
-            </select>
-            <select name="level" defaultValue={params.level || ""} className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none">
-              <option value="" className="bg-[#07080f] text-white/50">Tous les niveaux</option>
-              {LEVEL_OPTIONS.map((item) => (
-                <option key={item} value={item} className="bg-[#07080f] text-white">{item}</option>
-              ))}
-            </select>
+            <input type="text" name="city" defaultValue={params.city || ""} placeholder="Ville" className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
+            <input type="text" name="level" defaultValue={params.level || ""} placeholder="Niveau" className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30" />
             <div className="flex gap-3">
               <select name="sort" defaultValue={sort} className="min-w-0 flex-1 rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none">
                 <option value="match" className="bg-[#07080f] text-white">Compatibilité</option>

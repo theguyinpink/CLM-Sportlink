@@ -6,7 +6,6 @@ import ClubLogo from "@/components/club-logo";
 import CompatibilityBadge from "@/components/compatibility-badge";
 import InsightPill from "@/components/insight-pill";
 import { calculatePlayerClubCompatibility } from "@/lib/matching";
-import { LEVEL_OPTIONS, REGION_OPTIONS } from "@/lib/form-options";
 
 type SearchParams = {
   q?: string;
@@ -102,26 +101,20 @@ export default async function JoueurClubsPage({
             placeholder="Rechercher un club..."
             className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
           />
-          <select
+          <input
+            type="text"
             name="city"
             defaultValue={city}
-            className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
-          >
-            <option value="" className="bg-[#07080f] text-white/50">Toutes les zones</option>
-            {REGION_OPTIONS.map((region) => (
-              <option key={region} value={region} className="bg-[#07080f] text-white">{region}</option>
-            ))}
-          </select>
-          <select
+            placeholder="Ville"
+            className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+          />
+          <input
+            type="text"
             name="level"
             defaultValue={level}
-            className="rounded-full border border-white/10 bg-[#07080f] px-5 py-3 text-sm text-white outline-none"
-          >
-            <option value="" className="bg-[#07080f] text-white/50">Tous les niveaux</option>
-            {LEVEL_OPTIONS.map((item) => (
-              <option key={item} value={item} className="bg-[#07080f] text-white">{item}</option>
-            ))}
-          </select>
+            placeholder="Niveau"
+            className="rounded-full border border-white/10 bg-transparent px-5 py-3 text-sm text-white outline-none placeholder:text-white/30"
+          />
           <div className="flex gap-3">
             <select
               name="sort"
