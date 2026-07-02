@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, hasServiceRoleKey, requireAdminUser } from "@/lib/admin";
@@ -19,6 +20,11 @@ function safeText(value?: string | null, fallback = "Non renseigné") {
 
 function compactDate(value?: string | null) {
   return formatPostDate(value);
+}
+
+function shortText(value?: string | null, fallback = "Non renseigné", max = 110) {
+  const text = safeText(value, fallback);
+  return text.length > max ? `${text.slice(0, max).trim()}...` : text;
 }
 
 async function getCount(supabase: any, table: string, filters?: (query: any) => any) {
@@ -98,24 +104,32 @@ async function resolvePostAuthors(supabase: any, posts: any[]) {
 
 function StatCard({ label, value, helper }: { label: string; value: number | string; helper?: string }) {
   return (
-    <article className="premium-card rounded-[30px] p-5">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">{label}</p>
-      <p className="font-display mt-4 text-[3rem] leading-none text-white">{value}</p>
-      {helper && <p className="mt-3 text-sm leading-6 text-white/52">{helper}</p>}
+    <article className="premium-card rounded-[22px] p-4">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+      <p className="font-display mt-2 text-[2rem] leading-none text-white">{value}</p>
+      {helper && <p className="mt-2 text-xs leading-5 text-white/48">{helper}</p>}
     </article>
   );
 }
 
-function SectionTitle({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+function Panel({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
   return (
-    <div>
-      <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">{eyebrow}</p>
-      <h2 className="font-display mt-4 text-[2.8rem] uppercase leading-[0.9] text-white sm:text-[3.5rem]">
-        {title}
-      </h2>
-      <p className="mt-4 max-w-2xl text-sm leading-7 text-white/62">{description}</p>
-    </div>
+    <section className="premium-card rounded-[28px] p-4 sm:p-5">
+      <div className="mb-4 flex items-end justify-between gap-3 border-b border-white/6 pb-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.22em] text-white/32">{eyebrow}</p>
+          <h2 className="font-display mt-2 text-[1.65rem] uppercase leading-none text-white sm:text-[2rem]">
+            {title}
+          </h2>
+        </div>
+      </div>
+      <div className="max-h-[430px] space-y-3 overflow-y-auto pr-1">{children}</div>
+    </section>
   );
+}
+
+function EmptyLine({ children }: { children: ReactNode }) {
+  return <div className="rounded-[20px] border border-white/8 bg-white/[0.03] p-4 text-sm text-white/52">{children}</div>;
 }
 
 export default async function AdminPage() {
@@ -163,99 +177,88 @@ export default async function AdminPage() {
     getData(supabase, "club_offers", (q) =>
       q.select("id, club_id, title, category, position_needed, level_required, location, status, created_at")
         .order("created_at", { ascending: false })
-        .limit(10),
+        .limit(8),
     ),
     getData(supabase, "posts", (q) =>
-      q.select("*").order("created_at", { ascending: false }).limit(10),
+      q.select("*").order("created_at", { ascending: false }).limit(8),
     ),
     getData(supabase, "connection_requests", (q) =>
       q.select("id, status, source_role, created_at, responded_at")
         .order("created_at", { ascending: false })
-        .limit(10),
+        .limit(8),
     ),
     getData(supabase, "beta_feedback", (q) =>
-      q.select("id, user_id, role, category, rating, page_path, message, status, created_at")
+      q.select("id, user_id, user_role, feedback_type, rating, page_url, message, status, created_at")
         .order("created_at", { ascending: false })
-        .limit(12),
+        .limit(10),
     ),
   ]);
 
   const posts = await resolvePostAuthors(supabase, rawPosts);
 
   return (
-    <main className="space-y-14">
-      <section className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">Administration</p>
-          <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.8rem] lg:text-[5.7rem]">
-            Tableau
-            <br />
-            de contrôle
-          </h1>
-          <p className="mt-6 max-w-2xl text-base leading-8 text-white/68">
-            Vue privée de CLM SportLink pour suivre les joueurs, clubs, annonces, publications et demandes.
-          </p>
-        </div>
+    <main className="space-y-6 pb-10">
+      <section className="premium-card rounded-[30px] p-5 sm:p-6">
+        <div className="flex flex-wrap items-end justify-between gap-5">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.26em] text-white/35">Administration</p>
+            <h1 className="font-display mt-3 text-[2.6rem] uppercase leading-[0.9] text-white sm:text-[3.6rem]">
+              Tableau de contrôle
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-white/62">
+              Vue compacte pour suivre les comptes, annonces, publications, demandes et retours bêta.
+            </p>
+          </div>
 
-        <div className="premium-card rounded-[26px] px-5 py-4 text-sm text-white/62">
-          Connecté admin : <span className="text-white">{user.email}</span>
+          <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/58">
+            Admin : <span className="text-white">{user.email}</span>
+          </div>
         </div>
       </section>
 
       {!serviceRoleReady && (
-        <section className="rounded-[30px] border border-amber-400/20 bg-amber-400/10 p-6 text-amber-100">
-          <p className="font-medium">Configuration admin incomplète</p>
-          <p className="mt-2 text-sm leading-7 text-amber-100/75">
-            La page est accessible, mais les actions de modération complètes nécessitent la variable
-            <code className="mx-1 rounded bg-black/25 px-1.5 py-0.5">SUPABASE_SERVICE_ROLE_KEY</code>
-            dans <code className="mx-1 rounded bg-black/25 px-1.5 py-0.5">.env.local</code>.
-          </p>
+        <section className="rounded-[24px] border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
+          <span className="font-medium">Configuration admin incomplète.</span>{" "}
+          Ajoute <code className="rounded bg-black/25 px-1.5 py-0.5">SUPABASE_SERVICE_ROLE_KEY</code> pour les actions de modération complètes.
         </section>
       )}
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Joueurs" value={playerCount} helper="Profils joueurs créés" />
-        <StatCard label="Clubs" value={clubCount} helper="Fiches clubs créées" />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+        <StatCard label="Joueurs" value={playerCount} helper="Profils" />
+        <StatCard label="Clubs" value={clubCount} helper="Fiches" />
         <StatCard label="Annonces" value={`${activeOfferCount}/${offerCount}`} helper="Actives / total" />
-        <StatCard label="Publications" value={`${publicPostCount}/${postCount}`} helper="Visibles / total" />
-        <StatCard label="Demandes" value={requestCount} helper="Demandes de mise en relation" />
-        <StatCard label="Acceptées" value={acceptedRequestCount} helper="Contacts débloqués" />
-        <StatCard label="Retours bêta" value={`${newFeedbackCount}/${feedbackCount}`} helper="Nouveaux / total" />
-        <StatCard label="Service role" value={serviceRoleReady ? "OK" : "À configurer"} helper="Actions admin sécurisées" />
+        <StatCard label="Posts" value={`${publicPostCount}/${postCount}`} helper="Visibles / total" />
+        <StatCard label="Demandes" value={requestCount} helper="Total" />
+        <StatCard label="Acceptées" value={acceptedRequestCount} helper="Contacts" />
+        <StatCard label="Retours" value={`${newFeedbackCount}/${feedbackCount}`} helper="Nouveaux / total" />
+        <StatCard label="Service" value={serviceRoleReady ? "OK" : "Non"} helper="Admin key" />
       </section>
 
-
-      <section className="space-y-8">
-        <SectionTitle
-          eyebrow="Bêta"
-          title="Retours testeurs"
-          description="Tous les retours envoyés depuis l’espace connecté arrivent ici pour suivre les bugs, idées et problèmes mobile."
-        />
-
-        <div className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-6 xl:grid-cols-2">
+        <Panel eyebrow="Bêta" title="Retours testeurs">
           {feedbacks.length === 0 ? (
-            <div className="premium-card rounded-[30px] p-6 text-white/62">Aucun retour bêta pour le moment.</div>
+            <EmptyLine>Aucun retour bêta pour le moment.</EmptyLine>
           ) : (
             feedbacks.map((feedback: any) => (
-              <article key={feedback.id} className="premium-card rounded-[30px] p-5">
+              <article key={feedback.id} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#35e6a5]">
-                    {safeText(feedback.category, "retour")}
+                  <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#35e6a5]">
+                    {safeText(feedback.feedback_type, "retour")}
                   </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
                     {safeText(feedback.status, "new")}
                   </span>
                   {feedback.rating ? (
-                    <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8bb7ff]">
-                      note {feedback.rating}/5
+                    <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#8bb7ff]">
+                      {feedback.rating}/5
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-4 text-sm leading-7 text-white/72">{safeText(feedback.message, "Retour vide")}</p>
-                <p className="mt-4 text-xs leading-6 text-white/42">
-                  {safeText(feedback.role, "Utilisateur")} • {safeText(feedback.page_path, "Page non précisée")} • {compactDate(feedback.created_at)}
+                <p className="mt-3 text-sm leading-6 text-white/72">{shortText(feedback.message, "Retour vide", 150)}</p>
+                <p className="mt-3 text-xs leading-5 text-white/42">
+                  {safeText(feedback.user_role, "Utilisateur")} • {safeText(feedback.page_url, "Page non précisée")} • {compactDate(feedback.created_at)}
                 </p>
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <AdminActionButton
                     label="Vu"
                     title="Marquer ce retour comme vu ?"
@@ -275,53 +278,38 @@ export default async function AdminPage() {
               </article>
             ))
           )}
-        </div>
-      </section>
+        </Panel>
 
-      <section className="space-y-8">
-        <SectionTitle
-          eyebrow="Modération"
-          title="Dernières publications"
-          description="Tu peux masquer une publication, la réactiver ou la supprimer définitivement avec ses médias stockés."
-        />
-
-        <div className="grid gap-5">
+        <Panel eyebrow="Modération" title="Publications">
           {posts.length === 0 ? (
-            <div className="premium-card rounded-[30px] p-6 text-white/62">Aucune publication pour le moment.</div>
+            <EmptyLine>Aucune publication pour le moment.</EmptyLine>
           ) : (
             posts.map((post: any) => (
-              <article key={post.id} className="premium-card rounded-[30px] p-5">
-                <div className="flex flex-wrap items-start justify-between gap-5">
+              <article key={post.id} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8bb7ff]">
+                      <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#8bb7ff]">
                         {post.author_type || post.author_role || "player"}
                       </span>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
                         {post.visibility || "public"}
                       </span>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
                         {getPostContentLabel(post.content_type)}
                       </span>
                     </div>
-
-                    <h3 className="mt-4 text-lg font-semibold text-white">
-                      {safeText(post.title, post.resolved_author_label)}
-                    </h3>
-                    <p className="mt-2 text-sm text-white/52">
-                      Auteur : {post.resolved_author_label} • {compactDate(post.created_at)}
-                    </p>
-                    <p className="mt-4 line-clamp-3 text-sm leading-7 text-white/68">
-                      {safeText(post.text_content, "Publication sans texte")}
-                    </p>
+                    <h3 className="mt-3 text-base font-semibold text-white">{safeText(post.title, post.resolved_author_label)}</h3>
+                    <p className="mt-1 text-xs text-white/45">{post.resolved_author_label} • {compactDate(post.created_at)}</p>
+                    <p className="mt-3 text-sm leading-6 text-white/62">{shortText(post.text_content, "Publication sans texte", 150)}</p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex shrink-0 flex-wrap gap-2">
                     {post.visibility === "public" ? (
                       <AdminActionButton
                         label="Masquer"
                         title="Masquer la publication ?"
-                        description="La publication ne sera plus visible dans le fil d’actualité joueur ou club, mais elle restera conservée dans la base."
+                        description="La publication ne sera plus visible dans le fil, mais restera conservée dans la base."
                         confirmLabel="Masquer"
                         action={adminHidePost.bind(null, post.id)}
                       />
@@ -335,7 +323,6 @@ export default async function AdminPage() {
                         action={adminRestorePost.bind(null, post.id)}
                       />
                     )}
-
                     <AdminActionButton
                       label="Supprimer"
                       title="Supprimer définitivement ?"
@@ -349,38 +336,32 @@ export default async function AdminPage() {
               </article>
             ))
           )}
-        </div>
+        </Panel>
       </section>
 
-      <section className="space-y-8">
-        <SectionTitle
-          eyebrow="Recrutement"
-          title="Dernières annonces"
-          description="Tu peux désactiver une annonce problématique ou la réactiver si besoin."
-        />
-
-        <div className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-6 xl:grid-cols-2">
+        <Panel eyebrow="Recrutement" title="Annonces">
           {offers.length === 0 ? (
-            <div className="premium-card rounded-[30px] p-6 text-white/62">Aucune annonce pour le moment.</div>
+            <EmptyLine>Aucune annonce pour le moment.</EmptyLine>
           ) : (
             offers.map((offer: any) => (
-              <article key={offer.id} className="premium-card rounded-[30px] p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#c4a1ff]">
-                    {safeText(offer.category, "Annonce")}
-                  </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
-                    {offer.status || "active"}
-                  </span>
-                </div>
+              <article key={offer.id} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-[#9b5cff]/25 bg-[#9b5cff]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#c4a1ff]">
+                        {safeText(offer.category, "Annonce")}
+                      </span>
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
+                        {offer.status || "active"}
+                      </span>
+                    </div>
+                    <h3 className="mt-3 text-base font-semibold text-white">{safeText(offer.title, "Annonce sans titre")}</h3>
+                    <p className="mt-2 text-xs leading-5 text-white/48">
+                      {safeText(offer.position_needed, "Poste non précisé")} • {safeText(offer.level_required, "Niveau non précisé")} • {safeText(offer.location, "Zone non précisée")} • {compactDate(offer.created_at)}
+                    </p>
+                  </div>
 
-                <h3 className="mt-4 text-lg font-semibold text-white">{safeText(offer.title, "Annonce sans titre")}</h3>
-                <p className="mt-2 text-sm text-white/52">{compactDate(offer.created_at)}</p>
-                <p className="mt-4 text-sm leading-7 text-white/64">
-                  {safeText(offer.position_needed, "Poste non précisé")} • {safeText(offer.level_required, "Niveau non précisé")} • {safeText(offer.location, "Zone non précisée")}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-2">
                   {offer.status === "active" ? (
                     <AdminActionButton
                       label="Désactiver"
@@ -403,78 +384,60 @@ export default async function AdminPage() {
               </article>
             ))
           )}
-        </div>
+        </Panel>
+
+        <Panel eyebrow="Relations" title="Demandes">
+          {requests.length === 0 ? (
+            <EmptyLine>Aucune demande pour le moment.</EmptyLine>
+          ) : (
+            requests.map((request: any) => (
+              <article key={request.id} className="rounded-[22px] border border-white/8 bg-white/[0.03] p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
+                    {request.status || "pending"}
+                  </span>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white/45">
+                    source : {request.source_role || "?"}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm text-white/52">Créée le {compactDate(request.created_at)}</p>
+                {request.responded_at && <p className="mt-1 text-xs text-white/42">Réponse le {compactDate(request.responded_at)}</p>}
+              </article>
+            ))
+          )}
+        </Panel>
       </section>
 
-      <section className="grid gap-8 xl:grid-cols-2">
-        <div className="space-y-6">
-          <SectionTitle
-            eyebrow="Comptes"
-            title="Derniers joueurs"
-            description="Vue rapide des profils joueurs récemment créés."
-          />
-
-          <div className="grid gap-4">
-            {players.map((player: any) => (
-              <Link key={player.id} href={`/app/club/joueurs/${player.id}`} className="premium-card block rounded-[26px] p-5 transition hover:-translate-y-0.5">
+      <section className="grid gap-6 xl:grid-cols-2">
+        <Panel eyebrow="Comptes" title="Joueurs">
+          {players.length === 0 ? (
+            <EmptyLine>Aucun joueur pour le moment.</EmptyLine>
+          ) : (
+            players.map((player: any) => (
+              <Link key={player.id} href={`/app/club/joueurs/${player.id}`} className="block rounded-[22px] border border-white/8 bg-white/[0.03] p-4 transition hover:border-[#4f8cff]/25 hover:bg-[#4f8cff]/10">
                 <p className="font-medium text-white">{safeText(player.display_name, "Joueur sans nom")}</p>
                 <p className="mt-2 text-sm text-white/52">
                   {safeText(player.sport)} • {safeText(player.position, "Poste non précisé")} • {safeText(player.level, "Niveau non précisé")}
                 </p>
-                <p className="mt-2 text-sm text-white/42">{safeText(player.city)} {player.region ? `• ${player.region}` : ""}</p>
+                <p className="mt-1 text-xs text-white/40">{safeText(player.city)} {player.region ? `• ${player.region}` : ""}</p>
               </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <SectionTitle
-            eyebrow="Comptes"
-            title="Derniers clubs"
-            description="Vue rapide des clubs récemment créés."
-          />
-
-          <div className="grid gap-4">
-            {clubs.map((club: any) => (
-              <Link key={club.id} href={`/app/joueur/clubs/${club.id}`} className="premium-card block rounded-[26px] p-5 transition hover:-translate-y-0.5">
-                <p className="font-medium text-white">{safeText(club.club_name, "Club sans nom")}</p>
-                <p className="mt-2 text-sm text-white/52">
-                  {safeText(club.sport)} • {safeText(club.level, "Niveau non précisé")}
-                </p>
-                <p className="mt-2 text-sm text-white/42">{safeText(club.city)} {club.region ? `• ${club.region}` : ""}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <SectionTitle
-          eyebrow="Relations"
-          title="Dernières demandes"
-          description="Suivi des demandes envoyées, acceptées ou refusées sur la plateforme."
-        />
-
-        <div className="grid gap-4 md:grid-cols-2">
-          {requests.length === 0 ? (
-            <div className="premium-card rounded-[30px] p-6 text-white/62">Aucune demande pour le moment.</div>
-          ) : (
-            requests.map((request: any) => (
-              <article key={request.id} className="premium-card rounded-[26px] p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
-                    {request.status || "pending"}
-                  </span>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/45">
-                    source : {request.source_role || "?"}
-                  </span>
-                </div>
-                <p className="mt-4 text-sm text-white/52">Créée le {compactDate(request.created_at)}</p>
-                {request.responded_at && <p className="mt-2 text-sm text-white/42">Réponse le {compactDate(request.responded_at)}</p>}
-              </article>
             ))
           )}
-        </div>
+        </Panel>
+
+        <Panel eyebrow="Comptes" title="Clubs">
+          {clubs.length === 0 ? (
+            <EmptyLine>Aucun club pour le moment.</EmptyLine>
+          ) : (
+            clubs.map((club: any) => (
+              <Link key={club.id} href={`/app/joueur/clubs/${club.id}`} className="block rounded-[22px] border border-white/8 bg-white/[0.03] p-4 transition hover:border-[#4f8cff]/25 hover:bg-[#4f8cff]/10">
+                <p className="font-medium text-white">{safeText(club.club_name, "Club sans nom")}</p>
+                <p className="mt-2 text-sm text-white/52">{safeText(club.sport)} • {safeText(club.level, "Niveau non précisé")}</p>
+                <p className="mt-1 text-xs text-white/40">{safeText(club.city)} {club.region ? `• ${club.region}` : ""}</p>
+              </Link>
+            ))
+          )}
+        </Panel>
       </section>
     </main>
   );

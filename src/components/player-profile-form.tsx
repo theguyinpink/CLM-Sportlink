@@ -51,6 +51,7 @@ function SelectField({
       options={options}
       required={required}
       placeholder="Sélectionner"
+      buttonClassName="min-h-[50px]"
     />
   );
 }
@@ -144,7 +145,7 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="grid gap-16 lg:grid-cols-[0.85fr_1.15fr]">
+      <form onSubmit={handleSubmit} className="grid gap-12 xl:grid-cols-[minmax(280px,0.72fr)_minmax(560px,1.28fr)]">
         <div className="space-y-7">
           <div>
             <label className="mb-2 block text-sm text-white/55">Nom affiché</label>
@@ -235,10 +236,10 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
           </div>
 
           {isReferee && (
-            <section className="premium-card rounded-[30px] p-6">
+            <section className="premium-card rounded-[32px] p-6 sm:p-8">
               <p className="text-[11px] uppercase tracking-[0.24em] text-[#35e6a5]">Arbitrage</p>
               <h3 className="font-display mt-3 text-[2rem] uppercase leading-[0.95] text-white">Disponibilité arbitre</h3>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
                 <SelectField
                   name="referee_sports"
                   label="Sport arbitré"
@@ -261,7 +262,7 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
                   <input name="referee_radius_km" type="number" min="0" defaultValue={profile?.referee_radius_km ?? ""} placeholder="25" className={inputClass} />
                 </div>
               </div>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Disponibilités</label>
                   <textarea name="referee_availability" rows={4} defaultValue={profile?.referee_availability ?? ""} placeholder="Week-end, mercredi soir, tournois..." className="w-full rounded-[22px] border border-white/8 bg-white/2 px-4 py-4 text-white outline-none" />
@@ -275,10 +276,10 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
           )}
 
           {isStaff && (
-            <section className="premium-card rounded-[30px] p-6">
+            <section className="premium-card rounded-[32px] p-6 sm:p-8">
               <p className="text-[11px] uppercase tracking-[0.24em] text-[#8bb7ff]">Coach / staff</p>
               <h3 className="font-display mt-3 text-[2rem] uppercase leading-[0.95] text-white">Missions possibles</h3>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 grid gap-7">
                 <SelectField
                   name="staff_roles"
                   label="Rôle staff"
@@ -287,7 +288,7 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
                 />
                 <div>
                   <label className="mb-2 block text-sm text-white/55">Expérience</label>
-                  <textarea name="staff_experience" rows={4} defaultValue={profile?.staff_experience ?? ""} placeholder="Ton expérience, tes disponibilités, les catégories que tu peux encadrer..." className="w-full rounded-[22px] border border-white/8 bg-white/2 px-4 py-4 text-white outline-none" />
+                  <textarea name="staff_experience" rows={6} defaultValue={profile?.staff_experience ?? ""} placeholder="Ton expérience, tes disponibilités, les catégories que tu peux encadrer..." className="min-h-[150px] w-full rounded-[24px] border border-white/8 bg-white/[0.03] px-5 py-5 text-white outline-none placeholder:text-white/30 focus:border-[#4f8cff]/35" />
                 </div>
               </div>
             </section>

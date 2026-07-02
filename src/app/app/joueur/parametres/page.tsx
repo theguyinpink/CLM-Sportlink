@@ -8,6 +8,7 @@ import {
 } from "@/app/media-actions";
 import PlayerAvatar from "@/components/player-avatar";
 import FileInput from "@/components/file-input";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default async function JoueurParametresPage({
   searchParams,
@@ -116,6 +117,21 @@ export default async function JoueurParametresPage({
         </div>
 
         <div className="space-y-8">
+          <div className="rounded-[28px] border border-white/8 bg-white/2 p-6">
+            <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">
+              Apparence
+            </p>
+            <h2 className="mt-3 text-lg font-semibold text-white">
+              Mode d’affichage
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-white/60">
+              Choisis entre le mode clair, sombre ou le thème de ton appareil.
+            </p>
+            <div className="mt-5">
+              <ThemeToggle />
+            </div>
+          </div>
+
           <div className="rounded-[28px] border border-white/8 bg-white/2 p-6">
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">
               Compte
