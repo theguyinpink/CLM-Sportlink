@@ -277,7 +277,7 @@ export default function AppSidebar({
   }
 
   const renderNav = () => (
-    <nav className="mt-5 grid gap-1.5">
+    <nav className="app-sidebar-nav mt-5 grid gap-1.5">
       {items.map((item) => {
         const isActive =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -324,9 +324,9 @@ export default function AppSidebar({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.035] px-4 py-3 text-sm text-white shadow-[0_16px_50px_rgba(0,0,0,0.2)] transition hover:border-[#4f8cff]/30 hover:bg-[#4f8cff]/10"
+          className="app-mobile-menu-button inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.035] px-4 py-3 text-sm text-white shadow-[0_16px_50px_rgba(0,0,0,0.2)] transition hover:border-[#4f8cff]/30 hover:bg-[#4f8cff]/10"
         >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10">
+          <span className="app-mobile-menu-button-icon inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10">
             <MenuIcon />
           </span>
           <span>Menu</span>
@@ -335,17 +335,17 @@ export default function AppSidebar({
 
       <div
         className={[
-          "fixed inset-0 z-[70] bg-[#050612]/82 backdrop-blur-md transition duration-300 xl:hidden",
+          "app-mobile-sidebar-overlay fixed inset-0 z-[70] bg-[#050612]/82 backdrop-blur-md transition duration-300 xl:hidden",
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
       >
         <div
           className={[
-            "absolute left-0 top-0 h-dvh w-[86vw] max-w-[380px] overflow-y-auto border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
+            "app-mobile-sidebar-panel absolute left-0 top-0 h-dvh w-[86vw] max-w-[380px] overflow-y-auto border-r border-white/10 bg-[#0d1020]/96 px-5 py-5 shadow-[0_28px_110px_rgba(0,0,0,0.55)] transition duration-300",
             open ? "translate-x-0" : "-translate-x-full",
           ].join(" ")}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-white/8 pb-5">
+          <div className="app-mobile-sidebar-header flex items-start justify-between gap-4 border-b border-white/8 pb-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">
                 {role === "player" ? "Espace joueur" : "Espace club"}
@@ -358,7 +358,7 @@ export default function AppSidebar({
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:bg-white/[0.06]"
+              className="app-mobile-sidebar-close inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:bg-white/[0.06]"
               aria-label="Fermer le menu"
             >
               <CloseIcon />
@@ -366,6 +366,7 @@ export default function AppSidebar({
           </div>
 
           {renderNav()}
+          <div className="app-mobile-sidebar-safe-space" aria-hidden="true" />
         </div>
       </div>
 

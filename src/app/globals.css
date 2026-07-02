@@ -781,3 +781,108 @@ html.light .home-page .btn-secondary * {
   -webkit-text-fill-color: #0f172a !important;
 }
 
+
+/* Sidebar mobile : mode clair + scroll fiable jusqu'au dernier bouton. */
+.app-mobile-sidebar-panel {
+  height: 100svh;
+  max-height: 100dvh;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-bottom: max(2rem, calc(env(safe-area-inset-bottom) + 2rem));
+  padding-bottom: max(2rem, calc(env(safe-area-inset-bottom) + 2rem)) !important;
+}
+
+@supports not (height: 100svh) {
+  .app-mobile-sidebar-panel {
+    height: 100vh;
+  }
+}
+
+.app-mobile-sidebar-safe-space {
+  height: max(2rem, calc(env(safe-area-inset-bottom) + 2rem));
+  flex: 0 0 auto;
+}
+
+html.light .app-mobile-menu-button {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+  color: #050612 !important;
+  box-shadow: 0 14px 42px rgba(15, 23, 42, 0.10) !important;
+}
+
+html.light .app-mobile-menu-button,
+html.light .app-mobile-menu-button * {
+  color: #050612 !important;
+  -webkit-text-fill-color: #050612 !important;
+}
+
+html.light .app-mobile-menu-button-icon {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  background: rgba(15, 23, 42, 0.035) !important;
+}
+
+html.light .app-mobile-sidebar-overlay {
+  background: rgba(15, 23, 42, 0.24) !important;
+}
+
+html.light .app-mobile-sidebar-panel {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(79, 140, 255, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.96)) !important;
+  border-right-color: rgba(15, 23, 42, 0.10) !important;
+  color: #0f172a !important;
+  box-shadow: 0 28px 110px rgba(15, 23, 42, 0.20) !important;
+}
+
+html.light .app-mobile-sidebar-panel .app-mobile-sidebar-header {
+  border-bottom-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+html.light .app-mobile-sidebar-panel,
+html.light .app-mobile-sidebar-panel p,
+html.light .app-mobile-sidebar-panel span,
+html.light .app-mobile-sidebar-panel a:not([class*="from-[#4f8cff]"]),
+html.light .app-mobile-sidebar-panel button,
+html.light .app-mobile-sidebar-panel svg,
+html.light .app-mobile-sidebar-panel .text-white,
+html.light .app-mobile-sidebar-panel [class~="text-white"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+html.light .app-mobile-sidebar-panel [class*="text-white/"] {
+  color: rgba(15, 23, 42, 0.64) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.64) !important;
+}
+
+html.light .app-mobile-sidebar-panel .app-sidebar-nav a:not([class*="from-[#4f8cff]"]) {
+  color: rgba(15, 23, 42, 0.72) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.72) !important;
+}
+
+html.light .app-mobile-sidebar-panel .app-sidebar-nav a:not([class*="from-[#4f8cff]"]):hover {
+  background: rgba(79, 140, 255, 0.08) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+html.light .app-mobile-sidebar-panel .app-sidebar-nav a[class*="from-[#4f8cff]"],
+html.light .app-mobile-sidebar-panel .app-sidebar-nav a[class*="from-[#4f8cff]"] * {
+  color: #050612 !important;
+  -webkit-text-fill-color: #050612 !important;
+}
+
+html.light .app-mobile-sidebar-close {
+  background: rgba(15, 23, 42, 0.035) !important;
+  border-color: rgba(15, 23, 42, 0.10) !important;
+  color: #050612 !important;
+}
+
+html.light .app-mobile-sidebar-close:hover {
+  background: rgba(79, 140, 255, 0.10) !important;
+}
+
+html.light .app-mobile-sidebar-panel .app-sidebar-nav [class*="bg-[#050612]"][class*="text-[#00d4ff]"] {
+  color: #00d4ff !important;
+  -webkit-text-fill-color: #00d4ff !important;
+}
