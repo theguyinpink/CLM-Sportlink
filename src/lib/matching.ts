@@ -448,17 +448,39 @@ export function calculatePlayerClubCompatibility(player: PlayerLike, club: ClubL
 }
 
 export function calculatePlayerCompletion(player: PlayerLike & { contact_email?: string | null; phone?: string | null }) {
+  const roles = rolesList(player.roles_available);
   const checks = [
     { label: "Nom affiché", done: Boolean(player.display_name) },
-    { label: "Sport", done: Boolean(player.sport) },
-    { label: "Poste", done: Boolean(player.position) },
-    { label: "Rôle", done: rolesList(player.roles_available).length > 0 },
-    { label: "Niveau", done: Boolean(player.level) },
-    { label: "Ville ou région", done: Boolean(player.city || player.region) },
+    { label: "Rôle", done: roles.length > 0 },
+    { label: roles.includes("referee") && !roles.includes("player") ? "Sport arbitré" : roles.includes("staff") && !roles.includes("player") ? "Sport encadré" : "Sport", done: Boolean(player.sport || player.referee_sports) },
+    { label: "Ville ou région", done: Boolean(player.city || player.region || player.referee_city) },
     { label: "Bio sportive", done: Boolean(player.bio && player.bio.length > 40) },
     { label: "Contact", done: Boolean(player.contact_email || player.phone) },
     { label: "Avatar", done: Boolean(player.avatar_path) },
   ];
+
+  if (roles.includes("player")) {
+    checks.push(
+      { label: "Poste", done: Boolean(player.position) },
+      { label: "Niveau joueur", done: Boolean(player.level) },
+    );
+  }
+
+  if (roles.includes("referee")) {
+    checks.push(
+      { label: "Niveau arbitre", done: Boolean(player.referee_level) },
+      { label: "Zone arbitre", done: Boolean(player.referee_city || player.city || player.region) },
+      { label: "Disponibilités arbitre", done: Boolean(player.referee_availability || player.referee_experience) },
+    );
+  }
+
+  if (roles.includes("staff")) {
+    checks.push(
+      { label: "Rôle staff", done: Boolean(player.staff_roles) },
+      { label: "Expérience staff", done: Boolean(player.staff_experience) },
+    );
+  }
+
   const done = checks.filter((item) => item.done).length;
   return { score: Math.round((done / checks.length) * 100), checks };
 }

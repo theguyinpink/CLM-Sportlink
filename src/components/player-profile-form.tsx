@@ -17,9 +17,12 @@ import {
 import { savePlayerProfileFromClient } from "@/app/profile-actions";
 import CustomSelect from "@/components/custom-select";
 
+type ProfileRole = "player" | "referee" | "staff";
+
 type PlayerProfileFormProps = {
   profile?: any;
   defaultError?: string;
+  defaultProfileRole?: ProfileRole;
 };
 
 const inputClass = "w-full border-b border-white/10 bg-transparent px-0 py-3 text-white outline-none placeholder:text-white/30";
@@ -56,27 +59,37 @@ function SelectField({
   );
 }
 
-function readRoles(value: any) {
-  if (Array.isArray(value)) return value.map(String);
-  if (!value) return ["player"];
+function normalizeProfileRole(value?: string | null): ProfileRole {
+  return value === "referee" || value === "staff" || value === "player" ? value : "player";
+}
+
+function readRoles(value: any, fallback: ProfileRole = "player") {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (!value) return [fallback];
   try {
     const parsed = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.map(String);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
   } catch {
     // Valeur historique possible.
   }
-  return String(value)
+  const roles = String(value)
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+
+  return roles.length ? roles : [fallback];
 }
 
-export default function PlayerProfileForm({ profile, defaultError }: PlayerProfileFormProps) {
+export default function PlayerProfileForm({ profile, defaultError, defaultProfileRole = "player" }: PlayerProfileFormProps) {
   const router = useRouter();
   const [error, setError] = useState(defaultError || "");
   const [loading, setLoading] = useState(false);
-  const initialRoles = useMemo(() => readRoles(profile?.roles_available), [profile?.roles_available]);
-  const [roles, setRoles] = useState<string[]>(initialRoles.length ? initialRoles : ["player"]);
+  const normalizedDefaultRole = normalizeProfileRole(defaultProfileRole);
+  const initialRoles = useMemo(
+    () => readRoles(profile?.roles_available, normalizedDefaultRole),
+    [profile?.roles_available, normalizedDefaultRole],
+  );
+  const [roles, setRoles] = useState<string[]>(initialRoles.length ? initialRoles : [normalizedDefaultRole]);
   const [sport, setSport] = useState(profile?.sport || "");
   const [refereeSport, setRefereeSport] = useState(profile?.referee_sports || profile?.sport || "");
 
@@ -129,8 +142,23 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
     router.refresh();
   }
 
+  const isPlayer = roles.includes("player");
   const isReferee = roles.includes("referee");
   const isStaff = roles.includes("staff");
+  const sportLabel = isPlayer
+    ? "Sport principal"
+    : isReferee && !isStaff
+      ? "Sport arbitré"
+      : isStaff && !isReferee
+        ? "Sport encadré"
+        : "Sport principal";
+  const bioPlaceholder = isPlayer
+    ? `Décris ton projet, tes qualités, ta disponibilité et ton profil ${getSportFieldPlaceholder(sport).toLowerCase()}...`
+    : isReferee && !isStaff
+      ? "Décris tes disponibilités, tes diplômes, ton expérience d’arbitrage et ta zone de déplacement..."
+      : isStaff && !isReferee
+        ? "Décris ton expérience, tes missions possibles, les catégories que tu peux encadrer et tes disponibilités..."
+        : "Décris ton projet, tes qualités, tes disponibilités et ton profil sportif...";
   const playerLevels = withCurrentOption(getSportLevels(sport), profile?.level);
   const playerPositions = withCurrentOption(getSportPositions(sport), profile?.position);
   const refereeLevels = withCurrentOption(REFEREE_LEVEL_OPTIONS, profile?.referee_level);
@@ -159,26 +187,30 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
 
           <SelectField
             name="sport"
-            label="Sport principal"
+            label={sportLabel}
             value={sport}
             onChange={(value) => setSport(value)}
             options={withCurrentOption(SPORT_OPTIONS, profile?.sport)}
             required
           />
 
-          <SelectField
-            name="position"
-            label={getSportFieldLabel(sport)}
-            defaultValue={profile?.position ?? ""}
-            options={playerPositions}
-          />
+          {isPlayer && (
+            <>
+              <SelectField
+                name="position"
+                label={getSportFieldLabel(sport)}
+                defaultValue={profile?.position ?? ""}
+                options={playerPositions}
+              />
 
-          <SelectField
-            name="level"
-            label="Niveau joueur"
-            defaultValue={profile?.level ?? ""}
-            options={playerLevels}
-          />
+              <SelectField
+                name="level"
+                label="Niveau joueur"
+                defaultValue={profile?.level ?? ""}
+                options={playerLevels}
+              />
+            </>
+          )}
 
           <div>
             <label className="mb-2 block text-sm text-white/55">Ville</label>
@@ -200,7 +232,7 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
           <div className="premium-card rounded-[28px] p-5">
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Rôles disponibles</p>
             <p className="mt-3 text-xs leading-6 text-white/42">
-              Tu peux rester joueur, mais aussi indiquer que tu es disponible comme arbitre ou staff.
+              Tu peux choisir un seul profil ou cumuler plusieurs rôles selon ce que tu veux proposer aux clubs.
             </p>
             <div className="mt-5 grid gap-3">
               {PROFILE_ROLE_OPTIONS.map((option) => (
@@ -231,7 +263,7 @@ export default function PlayerProfileForm({ profile, defaultError }: PlayerProfi
               defaultValue={profile?.bio ?? ""}
               rows={8}
               className="w-full rounded-[28px] border border-white/8 bg-white/[0.02] px-5 py-5 text-white outline-none placeholder:text-white/30"
-              placeholder={`Décris ton projet, tes qualités, ta disponibilité et ton profil ${getSportFieldPlaceholder(sport).toLowerCase()}...`}
+              placeholder={bioPlaceholder}
             />
           </div>
 

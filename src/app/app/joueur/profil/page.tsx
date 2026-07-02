@@ -7,6 +7,49 @@ import OnboardingCard from "@/components/onboarding-card";
 import ContactCounterModal from "@/components/contact-counter-modal";
 import { calculatePlayerCompletion, getOfferTypeLabel } from "@/lib/matching";
 
+function readRoles(value: any) {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (!value) return ["player"];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    // Valeur historique possible.
+  }
+
+  const roles = String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return roles.length ? roles : ["player"];
+}
+
+function roleProfileLabel(roles: string[]) {
+  if (roles.includes("player")) return "CV sportif joueur";
+  if (roles.includes("referee")) return "CV sportif arbitre";
+  if (roles.includes("staff")) return "CV sportif coach / staff";
+  return "CV sportif";
+}
+
+function profileSubtitle(profile: any, roles: string[]) {
+  if (roles.includes("player")) {
+    return [profile.sport, profile.position, profile.level].filter(Boolean).join(" • ");
+  }
+
+  if (roles.includes("referee")) {
+    return [profile.referee_sports || profile.sport, profile.referee_level, profile.referee_city || profile.city]
+      .filter(Boolean)
+      .join(" • ");
+  }
+
+  if (roles.includes("staff")) {
+    return [profile.sport, profile.staff_roles, profile.city || profile.region].filter(Boolean).join(" • ");
+  }
+
+  return [profile.sport, profile.city || profile.region].filter(Boolean).join(" • ");
+}
+
 export default async function PlayerProfilePage() {
   const supabase = await createClient();
   const {
@@ -54,9 +97,37 @@ export default async function PlayerProfilePage() {
     .filter(Boolean);
 
   const completion = calculatePlayerCompletion(profile);
-  const roles = Array.isArray(profile.roles_available)
-    ? profile.roles_available
-    : String(profile.roles_available || "player").split(",").map((item) => item.trim()).filter(Boolean);
+  const roles = readRoles(profile.roles_available);
+  const isPlayer = roles.includes("player");
+  const isReferee = roles.includes("referee");
+  const isStaff = roles.includes("staff");
+  const subtitle = profileSubtitle(profile, roles) || "Profil à compléter";
+
+  const statCards = [
+    ...(isPlayer
+      ? [
+          { label: "Poste", value: profile.position || "Non renseigné" },
+          { label: "Niveau", value: profile.level || "Non renseigné" },
+        ]
+      : []),
+    ...(isReferee
+      ? [
+          { label: "Sport arbitré", value: profile.referee_sports || profile.sport || "Non renseigné" },
+          { label: "Niveau arbitre", value: profile.referee_level || "Non renseigné" },
+        ]
+      : []),
+    ...(isStaff
+      ? [
+          { label: "Rôle staff", value: profile.staff_roles || "Non renseigné" },
+          {
+            label: "Expérience staff",
+            value: profile.staff_experience ? "Renseignée" : "Non renseignée",
+          },
+        ]
+      : []),
+    { label: "Zone", value: profile.city || profile.region || "Non renseignée" },
+    { label: "Rôles", value: roles.map((role: string) => getOfferTypeLabel(role)).join(" • ") },
+  ];
 
   return (
     <main className="space-y-14">
@@ -65,9 +136,13 @@ export default async function PlayerProfilePage() {
           <div className="flex items-start gap-5">
             <PlayerAvatar avatarPath={profile.avatar_path} displayName={profile.display_name} size="lg" />
             <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">CV sportif joueur</p>
-              <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem]">{profile.display_name}</h1>
-              <p className="mt-4 text-white/68">{profile.sport}{profile.position ? ` • ${profile.position}` : ""}{profile.level ? ` • ${profile.level}` : ""}</p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">
+                {roleProfileLabel(roles)}
+              </p>
+              <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem]">
+                {profile.display_name}
+              </h1>
+              <p className="mt-4 text-white/68">{subtitle}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {roles.map((role: string) => (
                   <span key={role} className="rounded-full border border-[#35e6a5]/20 bg-[#35e6a5]/10 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[#8ff5cf]">
@@ -84,7 +159,7 @@ export default async function PlayerProfilePage() {
 
       <OnboardingCard
         title="Qualité du CV sportif"
-        description="Cette jauge indique si ton profil donne assez de matière aux clubs pour te comprendre rapidement."
+        description="Cette jauge indique si ton profil donne assez de matière aux clubs pour te comprendre rapidement. Les critères s’adaptent à ton rôle : joueur, arbitre ou coach / staff."
         score={completion.score}
         checks={completion.checks}
         ctaHref="/app/joueur/parametres"
@@ -92,32 +167,22 @@ export default async function PlayerProfilePage() {
       />
 
       <section className="grid gap-6 lg:grid-cols-5">
-        <div className="premium-card rounded-[28px] p-5">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Poste</p>
-          <p className="mt-3 text-white">{profile.position || "Non renseigné"}</p>
-        </div>
-        <div className="premium-card rounded-[28px] p-5">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Niveau</p>
-          <p className="mt-3 text-white">{profile.level || "Non renseigné"}</p>
-        </div>
-        <div className="premium-card rounded-[28px] p-5">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Zone</p>
-          <p className="mt-3 text-white">{profile.city || profile.region || "Non renseignée"}</p>
-        </div>
-        <div className="premium-card rounded-[28px] p-5">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Rôles</p>
-          <p className="mt-3 text-white">{roles.map((role: string) => getOfferTypeLabel(role)).join(" • ")}</p>
-        </div>
+        {statCards.map((card) => (
+          <div key={card.label} className="premium-card rounded-[28px] p-5">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">{card.label}</p>
+            <p className="mt-3 text-white">{card.value}</p>
+          </div>
+        ))}
         <ContactCounterModal label="Nombre de contacts" contacts={contacts as any} />
       </section>
 
       <section className="grid gap-16 border-t border-white/5 pt-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="space-y-8">
 
-          {(roles.includes("referee") || roles.includes("staff")) && (
+          {(isReferee || isStaff) && (
             <div className="premium-card rounded-[30px] p-6">
               <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Disponibilités élargies</p>
-              {roles.includes("referee") && (
+              {isReferee && (
                 <div className="mt-5 border-b border-white/5 pb-5">
                   <p className="text-sm font-semibold text-[#8ff5cf]">Arbitrage</p>
                   <p className="mt-3 text-sm leading-7 text-white/68">
@@ -128,12 +193,12 @@ export default async function PlayerProfilePage() {
                   </p>
                   {(profile.referee_availability || profile.referee_experience) && (
                     <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/55">
-                      {[profile.referee_availability, profile.referee_experience].filter(Boolean).join("\n") }
+                      {[profile.referee_availability, profile.referee_experience].filter(Boolean).join("\n")}
                     </p>
                   )}
                 </div>
               )}
-              {roles.includes("staff") && (
+              {isStaff && (
                 <div className="mt-5">
                   <p className="text-sm font-semibold text-[#8bb7ff]">Coach / staff</p>
                   <p className="mt-3 text-sm leading-7 text-white/68">{profile.staff_roles || "Rôle staff non renseigné"}</p>

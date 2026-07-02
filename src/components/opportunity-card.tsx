@@ -24,6 +24,7 @@ export default function OpportunityCard({
 }: OpportunityCardProps) {
   const offerType = getOfferType(offer.offer_type, offer.category);
   const roleLabel = offerType === "referee" ? "Rôle" : offerType === "staff" ? "Mission" : "Poste";
+  const detailHref = offer?.id ? `/app/annonces/${offer.id}` : href;
 
   return (
     <article
@@ -79,7 +80,7 @@ export default function OpportunityCard({
       </div>
 
       <div className="mt-7 flex flex-wrap items-center gap-4">
-        <Link href={href} className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10">
+        <Link href={detailHref} className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10">
           Voir le détail
         </Link>
         {canApply && (

@@ -47,6 +47,19 @@ function clean(value?: string | null) {
   return String(value || "").trim();
 }
 
+function normalizeProfileRole(value?: unknown): "player" | "referee" | "staff" {
+  return value === "referee" || value === "staff" || value === "player" ? value : "player";
+}
+
+function normalizeRoles(values?: string[], fallback: "player" | "referee" | "staff" = "player") {
+  const allowed = new Set(["player", "referee", "staff"]);
+  const roles = (values || [])
+    .map((value) => String(value || "").trim())
+    .filter((value) => allowed.has(value));
+
+  return roles.length ? Array.from(new Set(roles)) : [fallback];
+}
+
 export async function saveClubProfileFromClient(
   input: SaveClubProfileInput,
 ): Promise<ActionResult> {
@@ -117,7 +130,8 @@ export async function savePlayerProfileFromClient(
   const bio = clean(input.bio);
   const contact_email = clean(input.contact_email);
   const phone = clean(input.phone);
-  const roles_available = input.roles_available?.length ? input.roles_available : ["player"];
+  const defaultProfileRole = normalizeProfileRole(user.user_metadata?.profile_role);
+  const roles_available = normalizeRoles(input.roles_available, defaultProfileRole);
   const referee_sports = clean(input.referee_sports);
   const referee_level = clean(input.referee_level);
   const referee_city = clean(input.referee_city);

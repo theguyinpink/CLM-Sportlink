@@ -17,6 +17,11 @@ export default async function EditPlayerProfilePage({
 
   if (!user) return null;
 
+  const defaultProfileRole =
+    user.user_metadata?.profile_role === "referee" || user.user_metadata?.profile_role === "staff"
+      ? user.user_metadata.profile_role
+      : "player";
+
   const { data: profile } = await supabase
     .from("player_profiles")
     .select("*")
@@ -39,7 +44,11 @@ export default async function EditPlayerProfilePage({
         </p>
       </section>
 
-      <PlayerProfileForm profile={profile} defaultError={errorMessage} />
+      <PlayerProfileForm
+        profile={profile}
+        defaultError={errorMessage}
+        defaultProfileRole={defaultProfileRole}
+      />
     </main>
   );
 }

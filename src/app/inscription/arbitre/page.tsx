@@ -17,10 +17,10 @@ export default async function SignupRefereePage({
             Arbitre
           </p>
           <h1 className="font-heading text-4xl font-semibold text-[#f4f7fb] sm:text-5xl">
-            Crée ton profil sportif
+            Crée ton profil arbitre
           </h1>
           <p className="mt-5 max-w-xl text-[#B3BAC7]">
-            Tu peux rejoindre CLM SportLink comme profil sportif et renseigner ensuite tes disponibilités d’arbitrage.
+            Tu peux rejoindre CLM SportLink comme arbitre, avec tes sports, ton niveau et tes disponibilités.
           </p>
         </div>
 
@@ -29,7 +29,7 @@ export default async function SignupRefereePage({
             Inscription arbitre
           </h2>
           <p className="mt-3 text-[#B3BAC7]">
-            Le compte reste un compte profil sportif, avec le rôle arbitre activable dans ton profil.
+            Ton profil sera directement configuré en arbitre. Tu pourras ajouter le rôle joueur plus tard seulement si tu en as besoin.
           </p>
 
           <SignupForm role="player" profileRole="referee" defaultError={error} />

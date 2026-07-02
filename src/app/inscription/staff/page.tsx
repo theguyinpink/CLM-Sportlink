@@ -17,10 +17,10 @@ export default async function SignupStaffPage({
             Coach / staff
           </p>
           <h1 className="font-heading text-4xl font-semibold text-[#f4f7fb] sm:text-5xl">
-            Crée ton profil sportif
+            Crée ton profil coach / staff
           </h1>
           <p className="mt-5 max-w-xl text-[#B3BAC7]">
-            Tu peux rejoindre CLM SportLink comme profil sportif et renseigner ensuite tes rôles staff.
+            Tu peux rejoindre CLM SportLink comme coach, encadrant ou staff, sans être obligé de remplir des infos de joueur.
           </p>
         </div>
 
@@ -29,7 +29,7 @@ export default async function SignupStaffPage({
             Inscription coach / staff
           </h2>
           <p className="mt-3 text-[#B3BAC7]">
-            Le compte reste un compte profil sportif, avec le rôle staff activable dans ton profil.
+            Ton profil sera directement configuré en coach / staff. Tu pourras ajouter le rôle joueur plus tard seulement si tu en as besoin.
           </p>
 
           <SignupForm role="player" profileRole="staff" defaultError={error} />
