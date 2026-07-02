@@ -156,7 +156,7 @@ export default function SiteNavbarClient({
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-white/8 bg-[#07080f]/78 backdrop-blur-2xl">
+      <header className="site-navbar sticky top-0 z-50 border-b border-white/8 bg-[#07080f]/78 backdrop-blur-2xl">
         <div className="mx-auto flex h-[84px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link
             href={homeHref}

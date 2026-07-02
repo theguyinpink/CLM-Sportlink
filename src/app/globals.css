@@ -658,3 +658,25 @@ html.light input::placeholder,
 html.light textarea::placeholder {
   color: rgba(71, 85, 105, 0.55);
 }
+
+html.light .site-navbar {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(79, 140, 255, 0.22), transparent 36%),
+    linear-gradient(135deg, rgba(79, 140, 255, 0.92), rgba(0, 212, 255, 0.86)) !important;
+  border-bottom-color: rgba(79, 140, 255, 0.24) !important;
+  color: #050612 !important;
+  box-shadow: 0 18px 55px rgba(79, 140, 255, 0.18);
+}
+
+html.light .site-navbar .text-white,
+html.light .site-navbar [class*="text-white/"] {
+  color: rgba(5, 6, 18, 0.82) !important;
+}
+
+html.light .site-navbar input {
+  color: #050612 !important;
+}
+
+html.light .site-navbar input::placeholder {
+  color: rgba(5, 6, 18, 0.48) !important;
+}
