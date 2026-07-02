@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 type ThemePreference = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
+
+type ThemeToggleProps = {
+  variant?: "panel" | "navbar";
+};
 
 const STORAGE_KEY = "clm-sportlink-theme";
+const THEME_EVENT = "clm-sportlink-theme-change";
 
 const options: Array<{ value: ThemePreference; label: string; description: string }> = [
   { value: "light", label: "Clair", description: "Interface lumineuse" },
@@ -12,52 +18,128 @@ const options: Array<{ value: ThemePreference; label: string; description: strin
   { value: "system", label: "Système", description: "Suit ton appareil" },
 ];
 
-function getSystemTheme() {
+function getSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined") return "dark";
   return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
 
+function getStoredTheme(): ThemePreference {
+  if (typeof window === "undefined") return "dark";
+
+  const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+  return saved === "light" || saved === "dark" || saved === "system" ? saved : "dark";
+}
+
+function resolveTheme(preference: ThemePreference): ResolvedTheme {
+  return preference === "system" ? getSystemTheme() : preference;
+}
+
 function applyTheme(preference: ThemePreference) {
-  const resolved = preference === "system" ? getSystemTheme() : preference;
+  const resolved = resolveTheme(preference);
 
   document.documentElement.classList.remove("light", "dark");
   document.documentElement.classList.add(resolved);
   document.documentElement.dataset.theme = resolved;
   document.documentElement.dataset.themePreference = preference;
+
+  return resolved;
 }
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState<ThemePreference>("dark");
-  const [mounted, setMounted] = useState(false);
+function subscribeTheme(callback: () => void) {
+  if (typeof window === "undefined") return () => undefined;
 
-  useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-    const initialTheme: ThemePreference =
-      saved === "light" || saved === "dark" || saved === "system" ? saved : "dark";
+  const media = window.matchMedia("(prefers-color-scheme: light)");
 
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
-    setMounted(true);
+  const handleThemeChange = () => {
+    const preference = getStoredTheme();
+    applyTheme(preference);
+    callback();
+  };
 
-    const media = window.matchMedia("(prefers-color-scheme: light)");
-    const handleSystemChange = () => {
-      const current = window.localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
-      if (current === "system") applyTheme("system");
-    };
+  const handleSystemChange = () => {
+    if (getStoredTheme() === "system") handleThemeChange();
+  };
 
-    media.addEventListener("change", handleSystemChange);
-    return () => media.removeEventListener("change", handleSystemChange);
-  }, []);
+  window.addEventListener("storage", handleThemeChange);
+  window.addEventListener(THEME_EVENT, handleThemeChange);
+  media.addEventListener("change", handleSystemChange);
 
-  function updateTheme(nextTheme: ThemePreference) {
-    setTheme(nextTheme);
-    window.localStorage.setItem(STORAGE_KEY, nextTheme);
-    applyTheme(nextTheme);
+  return () => {
+    window.removeEventListener("storage", handleThemeChange);
+    window.removeEventListener(THEME_EVENT, handleThemeChange);
+    media.removeEventListener("change", handleSystemChange);
+  };
+}
+
+function setPreference(nextTheme: ThemePreference) {
+  window.localStorage.setItem(STORAGE_KEY, nextTheme);
+  applyTheme(nextTheme);
+  window.dispatchEvent(new Event(THEME_EVENT));
+}
+
+function SunIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[18px] w-[18px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2" />
+      <path d="M12 20v2" />
+      <path d="m4.93 4.93 1.41 1.41" />
+      <path d="m17.66 17.66 1.41 1.41" />
+      <path d="M2 12h2" />
+      <path d="M20 12h2" />
+      <path d="m6.34 17.66-1.41 1.41" />
+      <path d="m19.07 4.93-1.41 1.41" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[18px] w-[18px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 13.2A8.5 8.5 0 0 1 10.8 3 7 7 0 1 0 21 13.2Z" />
+    </svg>
+  );
+}
+
+export default function ThemeToggle({ variant = "panel" }: ThemeToggleProps) {
+  const theme = useSyncExternalStore(subscribeTheme, getStoredTheme, () => "dark" as ThemePreference);
+  const resolvedTheme = resolveTheme(theme);
+
+  function toggleNavbarTheme() {
+    setPreference(resolvedTheme === "dark" ? "light" : "dark");
   }
 
-  if (!mounted) {
+  if (variant === "navbar") {
+    const nextLabel = resolvedTheme === "dark" ? "Passer en mode clair" : "Passer en mode sombre";
+
     return (
-      <div className="h-[50px] rounded-2xl border border-white/10 bg-white/[0.04]" />
+      <button
+        type="button"
+        onClick={toggleNavbarTheme}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.035] text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10"
+        aria-label={nextLabel}
+        title={nextLabel}
+      >
+        {resolvedTheme === "dark" ? <SunIcon /> : <MoonIcon />}
+      </button>
     );
   }
 
@@ -71,7 +153,7 @@ export default function ThemeToggle() {
             <button
               key={option.value}
               type="button"
-              onClick={() => updateTheme(option.value)}
+              onClick={() => setPreference(option.value)}
               className={[
                 "rounded-2xl px-4 py-3 text-left transition",
                 active

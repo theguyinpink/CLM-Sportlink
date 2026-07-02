@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import CreateContentMenu from "@/components/create-content-menu";
+import ThemeToggle from "@/components/theme-toggle";
 
 type SiteNavbarClientProps = {
   isAuthenticated: boolean;
@@ -129,9 +130,6 @@ export default function SiteNavbarClient({
     [homeHref, isAuthenticated]
   );
 
-  const connectedModeLabel = homeHref.includes("/club/")
-    ? "Espace club"
-    : "Espace joueur";
 
   const closeMenu = () => setOpen(false);
 
@@ -240,6 +238,8 @@ export default function SiteNavbarClient({
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5">
+            <ThemeToggle variant="navbar" />
+
             {!isAuthenticated ? (
               <>
                 <Link
