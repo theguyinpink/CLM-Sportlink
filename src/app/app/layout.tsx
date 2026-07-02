@@ -72,8 +72,8 @@ export default async function ConnectedAppLayout({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1720px] px-4 py-8 sm:px-6 lg:px-8 2xl:px-10">
-      <div className="grid gap-10 xl:grid-cols-[300px_minmax(0,1fr)]">
+    <div className="w-full px-4 py-8 sm:px-6 lg:px-8 2xl:px-10">
+      <div className="grid w-full gap-10 xl:grid-cols-[300px_minmax(0,1fr)]">
         <AppSidebar
           role={role}
           notificationCount={notificationCount}

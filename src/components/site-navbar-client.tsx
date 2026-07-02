@@ -157,7 +157,7 @@ export default function SiteNavbarClient({
   return (
     <>
       <header className="site-navbar sticky top-0 z-50 border-b border-white/8 bg-[#07080f]/78 backdrop-blur-2xl">
-        <div className="mx-auto flex h-[84px] w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex h-[84px] w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 2xl:px-10">
           <Link
             href={homeHref}
             className="group flex min-w-0 items-center gap-3"
@@ -179,6 +179,12 @@ export default function SiteNavbarClient({
               <p className="navbar-brand-title font-display text-[1.12rem] leading-none text-white">
                 CLM SportLink
               </p>
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#35e6a5] shadow-[0_0_14px_rgba(53,230,165,0.8)]" />
+                <p className="navbar-brand-subtitle truncate text-[10px] uppercase tracking-[0.22em] text-white/38">
+                  Système de recrutement sportif
+                </p>
+              </div>
             </div>
           </Link>
 
