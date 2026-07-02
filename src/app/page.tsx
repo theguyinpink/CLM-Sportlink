@@ -155,7 +155,7 @@ export default async function HomePage() {
     ]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="home-page mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <section className="relative overflow-hidden rounded-[42px] border border-white/8 bg-[#0d1020]/46 px-5 py-16 shadow-[0_32px_120px_rgba(0,0,0,0.34)] sm:px-8 sm:py-20 lg:px-12 lg:py-24">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute right-[-140px] top-[-140px] h-[400px] w-[400px] rounded-full bg-[#4f8cff]/22 blur-[110px] animate-hero-glow" />

@@ -659,39 +659,125 @@ html.light textarea::placeholder {
   color: rgba(71, 85, 105, 0.55);
 }
 
+/* Corrections ciblées : navbar + accueil en mode clair */
 html.light .site-navbar {
-  background: rgba(255, 255, 255, 0.94) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   border-bottom-color: rgba(15, 23, 42, 0.08) !important;
   color: #050612 !important;
-  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 50px rgba(15, 23, 42, 0.07) !important;
 }
 
-html.light .site-navbar .text-white,
-html.light .site-navbar [class*="text-white/"],
-html.light .site-navbar a,
-html.light .site-navbar span,
-html.light .site-navbar p,
+html.light .site-navbar .navbar-brand-title,
+html.light .site-navbar .navbar-brand-subtitle,
+html.light .site-navbar .navbar-login-link,
+html.light .site-navbar .navbar-login-link *,
 html.light .site-navbar button:not(.navbar-search-button),
-html.light .site-navbar svg {
+html.light .site-navbar button:not(.navbar-search-button) *,
+html.light .site-navbar a:not(.navbar-search-button),
+html.light .site-navbar a:not(.navbar-search-button) * {
   color: #050612 !important;
+  -webkit-text-fill-color: #050612 !important;
 }
 
-html.light .site-navbar input {
-  color: #050612 !important;
-  background: rgba(15, 23, 42, 0.06) !important;
-  border-color: rgba(15, 23, 42, 0.12) !important;
+html.dark .site-navbar .navbar-brand-title,
+html.dark .site-navbar .navbar-login-link,
+html.dark .site-navbar .navbar-login-link * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
-html.light .site-navbar input::placeholder {
-  color: rgba(5, 6, 18, 0.45) !important;
+html.dark .site-navbar .navbar-brand-subtitle {
+  color: rgba(255, 255, 255, 0.38) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.38) !important;
+}
+
+html.light .site-navbar input,
+html.light .site-navbar input[type="text"],
+html.light .site-navbar input[type="search"] {
+  color: #050612 !important;
+  -webkit-text-fill-color: #050612 !important;
+  caret-color: #050612 !important;
+}
+
+html.light .site-navbar input::placeholder,
+html.light .site-navbar input[type="text"]::placeholder,
+html.light .site-navbar input[type="search"]::placeholder {
+  color: rgba(5, 6, 18, 0.52) !important;
+  opacity: 1 !important;
 }
 
 html.light .site-navbar .navbar-search-button,
-html.light .site-navbar .navbar-search-button * {
+html.light .site-navbar .navbar-search-button *,
+html.light .site-navbar .navbar-search-button span {
   color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
 }
 
 html.light .site-navbar .navbar-search-button {
   background: #050612 !important;
   border-color: #050612 !important;
 }
+
+/* Accueil : le bloc hero contient encore une ancienne classe sombre.
+   Cette règle arrive après les exceptions sombres pour éviter le blanc sur blanc. */
+html.light .home-page {
+  color: #0f172a !important;
+}
+
+html.light .home-page section,
+html.light .home-page article,
+html.light .home-page .premium-card,
+html.light .home-page .premium-panel,
+html.light .home-page .premium-surface {
+  color: #0f172a !important;
+}
+
+html.light .home-page .text-white,
+html.light .home-page [class~="text-white"] {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+html.light .home-page [class*="text-white/"] {
+  color: rgba(15, 23, 42, 0.68) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.68) !important;
+}
+
+html.light .home-page .text-white\/38 {
+  color: rgba(15, 23, 42, 0.48) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.48) !important;
+}
+
+html.light .home-page .text-white\/45,
+html.light .home-page .text-white\/58 {
+  color: rgba(15, 23, 42, 0.58) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.58) !important;
+}
+
+html.light .home-page .text-white\/64,
+html.light .home-page .text-white\/68,
+html.light .home-page .text-white\/70,
+html.light .home-page .text-white\/72,
+html.light .home-page .text-white\/76 {
+  color: rgba(15, 23, 42, 0.72) !important;
+  -webkit-text-fill-color: rgba(15, 23, 42, 0.72) !important;
+}
+
+html.light .home-page .text-gradient-sport {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.light .home-page .btn-primary,
+html.light .home-page .btn-primary * {
+  color: #050612 !important;
+  -webkit-text-fill-color: #050612 !important;
+}
+
+html.light .home-page .btn-secondary,
+html.light .home-page .btn-secondary * {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+

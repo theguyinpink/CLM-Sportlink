@@ -176,7 +176,7 @@ export default function SiteNavbarClient({
             </div>
 
             <div className="hidden min-w-0 sm:block">
-              <p className="font-display text-[1.12rem] leading-none text-white">
+              <p className="navbar-brand-title font-display text-[1.12rem] leading-none text-white">
                 CLM SportLink
               </p>
             </div>
@@ -238,7 +238,7 @@ export default function SiteNavbarClient({
               <>
                 <Link
                   href="/connexion"
-                  className="hidden rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10 sm:inline-flex"
+                  className="navbar-login-link hidden rounded-full border border-white/10 bg-white/[0.035] px-4 py-2.5 text-sm text-white transition hover:border-[#4f8cff]/35 hover:bg-[#4f8cff]/10 sm:inline-flex"
                 >
                   Connexion
                 </Link>
@@ -337,7 +337,7 @@ export default function SiteNavbarClient({
                 <Link
                   href="/connexion"
                   onClick={closeMenu}
-                  className="block rounded-full border border-white/10 px-4 py-3 text-sm text-white/78"
+                  className="navbar-login-link block rounded-full border border-white/10 px-4 py-3 text-sm text-white/78"
                 >
                   Connexion
                 </Link>
