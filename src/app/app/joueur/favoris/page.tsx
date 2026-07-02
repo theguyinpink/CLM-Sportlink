@@ -73,7 +73,7 @@ export default async function PlayerFavoritesPage() {
             const data = item.data;
             const club = isOffer ? (Array.isArray(data.clubs) ? data.clubs[0] : data.clubs) : data;
             const offerType = isOffer ? getOfferType(data.offer_type, data.category) : null;
-            const href = isOffer ? `/app/joueur/clubs/${club?.id}` : `/app/joueur/clubs/${data.id}`;
+            const href = isOffer ? `/app/annonces/${data.id}` : `/app/joueur/clubs/${data.id}`;
 
             return (
               <article key={item.id} className="premium-card animate-fade-up rounded-[26px] p-5" style={{ animationDelay: `${index * 45}ms` }}>

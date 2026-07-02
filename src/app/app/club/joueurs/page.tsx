@@ -17,6 +17,15 @@ type SearchParams = {
   role?: "all" | "player" | "referee" | "staff";
 };
 
+function rolesFromProfile(player: any) {
+  return Array.isArray(player.roles_available)
+    ? player.roles_available.map(String)
+    : String(player.roles_available || "player")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+}
+
 export default async function ClubJoueursPage({
   searchParams,
 }: {
@@ -53,12 +62,11 @@ export default async function ClubJoueursPage({
 
   const offers = activeOffers || [];
 
-  // Recherche large : on garde uniquement les profils publics.
-  // Le score de compatibilité sert ensuite à classer sport, zone, niveau et poste.
   let playersQuery = supabase
     .from("player_profiles")
     .select("*")
     .or("is_public.eq.true,is_public.is.null");
+
   if (q) {
     const safeQ = q.replace(/[%_]/g, "");
     playersQuery = playersQuery.or(`display_name.ilike.%${safeQ}%,bio.ilike.%${safeQ}%,city.ilike.%${safeQ}%,position.ilike.%${safeQ}%`);
@@ -67,13 +75,7 @@ export default async function ClubJoueursPage({
   if (level) playersQuery = playersQuery.ilike("level", `%${level.replace(/[%_]/g, "")}%`);
 
   const { data: players } = await playersQuery.order("created_at", { ascending: false });
-  const roleMatches = (player: any) => {
-    if (role === "all") return true;
-    const roles = Array.isArray(player.roles_available)
-      ? player.roles_available
-      : String(player.roles_available || "player").split(",").map((item) => item.trim());
-    return roles.includes(role);
-  };
+  const roleMatches = (player: any) => role === "all" || rolesFromProfile(player).includes(role);
 
   const scoredPlayers = (players || []).filter(roleMatches).map((player) => {
     if (offers.length > 0) {
@@ -86,26 +88,32 @@ export default async function ClubJoueursPage({
 
     return { player, match: calculatePlayerClubCompatibility(player, club), offer: null };
   });
+
   const sortedPlayers = sort === "alpha"
-    ? scoredPlayers.sort((a, b) => (a.player.display_name || "").localeCompare(b.player.display_name || ""))
+    ? [...scoredPlayers].sort((a, b) => (a.player.display_name || "").localeCompare(b.player.display_name || ""))
     : sort === "match"
-      ? scoredPlayers.sort((a, b) => b.match.score - a.match.score)
+      ? [...scoredPlayers].sort((a, b) => b.match.score - a.match.score)
       : scoredPlayers;
 
   const hasFilters = Boolean(q || city || level || sort !== "match" || role !== "all");
 
   return (
-    <main className="space-y-12">
-      <section className="max-w-5xl">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-white/35">Joueurs</p>
-        <h1 className="font-display mt-5 text-[3.2rem] uppercase leading-[0.9] text-white sm:text-[4.6rem] lg:text-[5.6rem]">
-          Profils classés
-          <br />
-          par compatibilité
-        </h1>
-        <p className="mt-7 max-w-2xl text-base leading-8 text-white/68 sm:text-lg">
-          Une sélection lisible des joueurs avec score de compatibilité et signaux utiles.
-        </p>
+    <main className="space-y-7">
+      <section className="premium-card rounded-[28px] p-5 sm:p-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[color:var(--text-dim)]">Joueurs</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.06em] text-[color:var(--text-main)] sm:text-4xl">
+              Profils classés par compatibilité
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-[color:var(--text-muted)]">
+              Les profils les plus proches de tes besoins remontent en premier. Les cartes sont volontairement compactes pour voir plus de résultats.
+            </p>
+          </div>
+          <span className="rounded-full border border-[#4f8cff]/25 bg-[#4f8cff]/10 px-4 py-2 text-sm font-semibold text-[#4f8cff]">
+            {sortedPlayers.length} profil{sortedPlayers.length > 1 ? "s" : ""}
+          </span>
+        </div>
       </section>
 
       <section className="rounded-[28px] border border-white/8 bg-white/2 p-5">
@@ -153,45 +161,47 @@ export default async function ClubJoueursPage({
         </div>
       </section>
 
-      <section className="border-t border-white/5 pt-8">
+      <section>
         {sortedPlayers.length === 0 ? (
-          <EmptyState eyebrow="Aucun joueur" title="Aucun résultat" description="Aucun joueur public trouvé pour le moment. Vérifie qu'un profil joueur est bien public." resetHref="/app/club/joueurs" />
+          <EmptyState eyebrow="Aucun joueur" title="Aucun résultat" description="Aucun profil public trouvé pour le moment. Vérifie qu'un profil joueur est bien public." resetHref="/app/club/joueurs" />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {sortedPlayers.map(({ player, match, offer }, index) => (
-              <article key={player.id} className="premium-card animate-fade-up rounded-[32px] p-6" style={{ animationDelay: `${index * 60}ms` }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex min-w-0 items-start gap-4">
-                    <PlayerAvatar avatarPath={player.avatar_path} displayName={player.display_name} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap gap-2">
-                        {(() => {
-                          const roles = Array.isArray(player.roles_available) ? player.roles_available : String(player.roles_available || "player").split(",").map((item) => item.trim());
-                          return roles.slice(0, 3).map((item: string) => (
-                            <span key={`${player.id}-${item}`} className="rounded-full border border-[#35e6a5]/20 bg-[#35e6a5]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-[#8ff5cf]">
+          <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+            {sortedPlayers.map(({ player, match, offer }, index) => {
+              const roles = rolesFromProfile(player);
+
+              return (
+                <article key={player.id} className="premium-card animate-fade-up rounded-[26px] p-4 sm:p-5" style={{ animationDelay: `${index * 45}ms` }}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <PlayerAvatar avatarPath={player.avatar_path} displayName={player.display_name} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap gap-1.5">
+                          {roles.slice(0, 3).map((item: string) => (
+                            <span key={`${player.id}-${item}`} className="rounded-full border border-[#35e6a5]/20 bg-[#35e6a5]/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-[#35e6a5]">
                               {getOfferTypeLabel(item)}
                             </span>
-                          ));
-                        })()}
+                          ))}
+                        </div>
+                        <h2 className="mt-3 truncate text-xl font-semibold tracking-[-0.04em] text-[color:var(--text-main)]">{player.display_name}</h2>
+                        <p className="mt-2 text-xs leading-6 text-[color:var(--text-muted)]">
+                          {[player.sport, player.position, player.level, player.city || player.region].filter(Boolean).join(" • ") || "Profil à compléter"}
+                        </p>
                       </div>
-                      <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-white/35">{player.sport}{player.position ? ` • ${player.position}` : ""}{player.level ? ` • ${player.level}` : ""}</p>
-                      <h2 className="font-display mt-3 text-[2.2rem] uppercase leading-[0.92] text-white">{player.display_name}</h2>
-                      <p className="mt-3 text-sm leading-7 text-white/68">{player.city || "Ville non renseignée"}{player.region ? ` • ${player.region}` : ""}</p>
-                      {offer && <p className="mt-3 text-xs uppercase tracking-[0.18em] text-[#8bb7ff]">Basé sur : {offer.title} · {getOfferTypeLabel(getOfferType(offer.offer_type, offer.category))}</p>}
                     </div>
+                    <CompatibilityBadge match={match} compact />
                   </div>
-                  <CompatibilityBadge match={match} compact />
-                </div>
 
-                <p className="mt-5 text-sm leading-8 text-white/64">{player.bio || "Aucune bio pour le moment."}</p>
+                  {offer && <p className="mt-3 text-[11px] uppercase tracking-[0.16em] text-[#4f8cff]">Basé sur : {offer.title} · {getOfferTypeLabel(getOfferType(offer.offer_type, offer.category))}</p>}
+                  <p className="mt-3 line-clamp-2 text-sm leading-7 text-[color:var(--text-soft)]">{player.bio || "Aucune bio pour le moment."}</p>
 
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {match.reasons.slice(0, 4).map((reason) => <InsightPill key={`${player.id}-${reason.label}`} reason={reason} />)}
-                </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {match.reasons.slice(0, 3).map((reason) => <InsightPill key={`${player.id}-${reason.label}`} reason={reason} />)}
+                  </div>
 
-                <Link href={`/app/club/joueurs/${player.id}`} className="mt-6 inline-flex text-sm font-medium text-[#4f8cff]">Voir le CV sportif</Link>
-              </article>
-            ))}
+                  <Link href={`/app/club/joueurs/${player.id}`} className="mt-5 inline-flex text-sm font-medium text-[#4f8cff]">Voir le CV sportif</Link>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

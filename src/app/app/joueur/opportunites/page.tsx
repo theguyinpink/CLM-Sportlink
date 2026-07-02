@@ -120,39 +120,22 @@ export default async function JoueurOpportunitesPage({
     offers = [...offers].sort((a: any, b: any) => (a.offer.title || "").localeCompare(b.offer.title || ""));
   }
 
-  const bestMatch = offers[0];
   const completion = calculatePlayerCompletion(profile);
   const hasFilters = Boolean(q || city || level || sort !== "match" || type !== "all");
 
   return (
-    <main className="space-y-10">
+    <main className="space-y-6">
       <OnboardingCard
-        title="Profil joueur"
-        description="Plus ton profil est complet, plus les offres compatibles ressortent correctement dans ta recherche."
+        compact
+        title="Ton profil"
+        description="Plus ton profil est complet, plus les annonces sont classées proprement."
         score={completion.score}
         checks={completion.checks}
         ctaHref="/app/joueur/profil/edit"
-        ctaLabel="Améliorer mon profil"
+        ctaLabel="Compléter"
       />
 
-      <section className="space-y-6">
-        {bestMatch && (
-          <div className="premium-card rounded-[34px] p-6 sm:p-7">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-[#35e6a5]">Meilleur match</p>
-                <h1 className="font-display mt-3 text-[2.4rem] uppercase leading-[0.9] text-white sm:text-[3.2rem]">
-                  L’offre la plus compatible
-                </h1>
-              </div>
-              <span className="rounded-full border border-[#35e6a5]/25 bg-[#35e6a5]/10 px-4 py-2 text-sm font-semibold text-[#35e6a5]">
-                {bestMatch.match.score}% compatible
-              </span>
-            </div>
-            <OpportunityCard offer={bestMatch.offer} club={bestMatch.club} match={bestMatch.match} href={`/app/joueur/clubs/${bestMatch.club.id}`} index={0} />
-          </div>
-        )}
-
+      <section className="space-y-5">
         <div className="rounded-[28px] border border-white/8 bg-white/2 p-5">
           <div className="mb-5">
             <p className="text-[11px] uppercase tracking-[0.22em] text-white/35">Recherche</p>
@@ -224,7 +207,7 @@ export default async function JoueurOpportunitesPage({
             />
           ) : (
             offers.map((item: any, index: number) => (
-              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/joueur/clubs/${item.club.id}`} index={index} />
+              <OpportunityCard key={item.offer.id} offer={item.offer} club={item.club} match={item.match} href={`/app/annonces/${item.offer.id}`} index={index} />
             ))
           )}
         </div>

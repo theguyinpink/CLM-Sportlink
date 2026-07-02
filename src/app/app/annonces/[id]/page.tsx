@@ -256,24 +256,13 @@ export default async function AnnonceDetailPage({ params }: PageProps) {
   const offerType = getOfferType(offer.offer_type, offer.category);
   const match = profile && club ? calculateOfferCompatibility(profile, club, offer) : null;
 
-  const [{ data: savedOffer }, { data: savedClub }] = await Promise.all([
-    supabase
-      .from("saved_items")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("target_type", "club_offer")
-      .eq("target_id", offer.id)
-      .maybeSingle(),
-    club?.id
-      ? supabase
-          .from("saved_items")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("target_type", "club")
-          .eq("target_id", club.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
+  const { data: savedOffer } = await supabase
+    .from("saved_items")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("target_type", "club_offer")
+    .eq("target_id", offer.id)
+    .maybeSingle();
 
   return (
     <main className="space-y-7">
@@ -344,7 +333,6 @@ export default async function AnnonceDetailPage({ params }: PageProps) {
               <div className="mt-4 flex flex-wrap gap-2">
                 <FavoriteButton targetType="club_offer" targetId={offer.id} initialSaved={Boolean(savedOffer)} />
                 <ReportButton targetType="club_offer" targetId={offer.id} />
-                {club?.id && <FavoriteButton targetType="club" targetId={club.id} initialSaved={Boolean(savedClub)} />}
               </div>
 
               {profile && club?.id && (

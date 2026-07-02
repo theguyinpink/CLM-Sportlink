@@ -141,6 +141,24 @@ function InboxIcon() {
   );
 }
 
+
+function HeartIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-[18px] w-[18px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20.8 4.6a5.4 5.4 0 0 0-7.6 0L12 5.8l-1.2-1.2a5.4 5.4 0 1 0-7.6 7.6L12 21l8.8-8.8a5.4 5.4 0 0 0 0-7.6Z" />
+    </svg>
+  );
+}
+
 function ShieldIcon() {
   return (
     <svg
@@ -254,6 +272,7 @@ export default function AppSidebar({
     { label: "Demandes", href: "/app/joueur/demandes", icon: <InboxIcon /> },
     { label: "Clubs", href: "/app/joueur/clubs", icon: <ClubIcon /> },
     { label: "Opportunités", href: "/app/joueur/opportunites", icon: <DocumentIcon /> },
+    { label: "Favoris", href: "/app/joueur/favoris", icon: <HeartIcon /> },
     { label: "Paramètres", href: "/app/joueur/parametres", icon: <SettingsIcon /> },
     { label: "Feedback bêta", href: "/app/feedback", icon: <DocumentIcon /> },
   ];
@@ -266,6 +285,7 @@ export default function AppSidebar({
     { label: "Demandes", href: "/app/club/demandes", icon: <InboxIcon /> },
     { label: "Joueurs", href: "/app/club/joueurs", icon: <ClubIcon /> },
     { label: "Mes annonces", href: "/app/club/annonces", icon: <DocumentIcon /> },
+    { label: "Favoris", href: "/app/club/favoris", icon: <HeartIcon /> },
     { label: "Paramètres", href: "/app/club/parametres", icon: <SettingsIcon /> },
     { label: "Feedback bêta", href: "/app/feedback", icon: <DocumentIcon /> },
   ];
