@@ -179,12 +179,6 @@ export default function SiteNavbarClient({
               <p className="font-display text-[1.12rem] leading-none text-white">
                 CLM SportLink
               </p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#35e6a5] shadow-[0_0_14px_rgba(53,230,165,0.8)]" />
-                <p className="truncate text-[10px] uppercase tracking-[0.22em] text-white/38">
-                  Système de recrutement sportif
-                </p>
-              </div>
             </div>
           </Link>
 
@@ -229,7 +223,7 @@ export default function SiteNavbarClient({
               ) : (
                 <button
                   type="submit"
-                  className="rounded-full border border-white/8 bg-[#07080f]/72 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/62 transition hover:border-[#4f8cff]/35 hover:text-white"
+                  className="navbar-search-button rounded-full border border-white/8 bg-[#07080f]/72 px-4 py-2 text-xs uppercase tracking-[0.18em] text-white/62 transition hover:border-[#4f8cff]/35 hover:text-white"
                 >
                   Rechercher
                 </button>

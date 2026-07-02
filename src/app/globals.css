@@ -660,23 +660,38 @@ html.light textarea::placeholder {
 }
 
 html.light .site-navbar {
-  background:
-    radial-gradient(circle at 0% 0%, rgba(79, 140, 255, 0.22), transparent 36%),
-    linear-gradient(135deg, rgba(79, 140, 255, 0.92), rgba(0, 212, 255, 0.86)) !important;
-  border-bottom-color: rgba(79, 140, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-bottom-color: rgba(15, 23, 42, 0.08) !important;
   color: #050612 !important;
-  box-shadow: 0 18px 55px rgba(79, 140, 255, 0.18);
+  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
 }
 
 html.light .site-navbar .text-white,
-html.light .site-navbar [class*="text-white/"] {
-  color: rgba(5, 6, 18, 0.82) !important;
+html.light .site-navbar [class*="text-white/"],
+html.light .site-navbar a,
+html.light .site-navbar span,
+html.light .site-navbar p,
+html.light .site-navbar button:not(.navbar-search-button),
+html.light .site-navbar svg {
+  color: #050612 !important;
 }
 
 html.light .site-navbar input {
   color: #050612 !important;
+  background: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
 html.light .site-navbar input::placeholder {
-  color: rgba(5, 6, 18, 0.48) !important;
+  color: rgba(5, 6, 18, 0.45) !important;
+}
+
+html.light .site-navbar .navbar-search-button,
+html.light .site-navbar .navbar-search-button * {
+  color: #ffffff !important;
+}
+
+html.light .site-navbar .navbar-search-button {
+  background: #050612 !important;
+  border-color: #050612 !important;
 }
